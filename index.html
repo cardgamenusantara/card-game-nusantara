@@ -926,9 +926,14 @@
 
         /* KARTU STIKER YANG MUNCUL — persis di bawah area notifikasi (game-notification) */
         #sticker-anchor-desktop {
-            position: fixed; right: 20px; top: 88px; z-index: 9999;
+            /* [FIX] absolute (relatif ke .top-card-area yang position:relative) — BUKAN fixed.
+               Fixed membuat kartu menempel ke layar dan tidak ikut scroll bersama panel,
+               sehingga terlihat menutupi/tertutupi konten seperti player-area saat panel di-scroll. */
+            position: absolute; top: 0; right: 0; z-index: 10000;
             display: flex; flex-direction: column; align-items: flex-end;
+            pointer-events: none; /* biar tidak menghalangi klik ke elemen di bawahnya saat kosong */
         }
+        #sticker-anchor-desktop .sticker-card { pointer-events: auto; }
         @media (max-width: 768px) { #sticker-anchor-desktop { display: none; } }
         #sticker-anchor-mobile { width: 100%; margin-top: 4px; }
         .sticker-card {

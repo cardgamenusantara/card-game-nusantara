@@ -5506,6 +5506,16 @@
             </div>
 
             <div class="settings-section">
+                <span class="settings-section-label">😄 Volume Stiker</span>
+                <div class="settings-slider-row">
+                    <input type="range" class="settings-slider" id="vol-sticker"
+                           min="0" max="100" value="80"
+                           oninput="applyVolumeSticker(this.value)">
+                    <span class="settings-slider-val" id="vol-sticker-val">80%</span>
+                </div>
+            </div>
+
+            <div class="settings-section">
                 <span class="settings-section-label">🗺️ Tampilan</span>
                 <div class="settings-toggle-row">
                     <span class="settings-toggle-label">Tampilkan nama provinsi saat kursor menyentuh kartu</span>
@@ -5657,6 +5667,14 @@
                            min="0" max="100" value="50"
                            oninput="applyVolumeSfx(this.value)">
                     <span class="settings-slider-val" id="igs-vol-sfx-val">50%</span>
+                </div>
+
+                <span class="igs-section-label" style="margin-top:12px;">😄 Volume Stiker</span>
+                <div class="settings-slider-row">
+                    <input type="range" class="settings-slider" id="igs-vol-sticker"
+                           min="0" max="100" value="80"
+                           oninput="applyVolumeSticker(this.value)">
+                    <span class="settings-slider-val" id="igs-vol-sticker-val">80%</span>
                 </div>
 
                 <hr class="igs-divider">
@@ -11494,11 +11512,11 @@
         //   - gambar/stiker/<id>.mp4  → video landscape + suara, dipakai saat stiker muncul di bawah game-notification
         const STICKER_LIST = [
             { id: 'nangis',  label: 'Nangis' },
-            { id: 'bagus',  label: 'Bagus' },
+            { id: 'bagus',   label: 'Bagus' },
             { id: 'tertawa', label: 'Tertawa' },
             { id: 'tengil',  label: 'Tengil' }
         ];
-        const STICKER_COOLDOWN_MS = 3000;
+        const STICKER_COOLDOWN_MS = 12000;
         const STICKER_DISPLAY_MAX_MS = 6000; // batas aman jika event 'ended' video tidak terpicu
         let _stickerCooldownUntil = 0;
         let _stickerCooldownTimer = null;
@@ -11608,7 +11626,7 @@
             const card = document.createElement('div');
             card.className = 'sticker-card sticker-card-in' + (mobile ? ' sticker-card-mobile' : '');
             card.innerHTML = `
-                <div class="sticker-card-name">🙋 ${_shortName(item.playerName)}</div>
+                <div class="sticker-card-name">👤 ${_shortName(item.playerName)}</div>
                 <video src="${av(`gambar/stiker/${item.stickerId}.mp4`)}" autoplay playsinline></video>
             `;
 
@@ -11619,6 +11637,7 @@
             _stickerCurrentEl = card;
 
             const video = card.querySelector('video');
+            video.volume = _stickerVolume; // sesuai pengaturan "Volume Stiker"
             let advanced = false;
             const advance = () => {
                 if (advanced) return;
@@ -13499,16 +13518,19 @@
         const SFX_MAX = Math.max(...Object.values(SFX_BASE)); // 0.6
 
         // Muat volume tersimpan dari localStorage (jika ada)
+        let _stickerVolume = 0.8; // default 80% — dipakai saat video stiker diputar
         (function() {
             const v1  = localStorage.getItem('cgn_vol_bgmusic1');
             const v2  = localStorage.getItem('cgn_vol_bgmusic2');
             const sfx = localStorage.getItem('cgn_vol_sfx');
+            const stk = localStorage.getItem('cgn_vol_sticker');
             if (v1  !== null) soundEffects.bgMusic.volume  = parseInt(v1)  / 100;
             if (v2  !== null) soundEffects.bgMusic2.volume = parseInt(v2)  / 100;
             if (sfx !== null) {
                 const master = parseInt(sfx) / 100;
                 SFX_KEYS.forEach(k => { soundEffects[k].volume = master * (SFX_BASE[k] / SFX_MAX); });
             }
+            if (stk !== null) _stickerVolume = parseInt(stk) / 100;
         })();
 
         // =============================================
@@ -13581,6 +13603,9 @@
             if (s1)   { s1.value   = v1;   document.getElementById('igs-vol-bgmusic1-val').textContent = v1   + '%'; }
             if (s2)   { s2.value   = v2;   document.getElementById('igs-vol-bgmusic2-val').textContent = v2   + '%'; }
             if (sSfx) { sSfx.value = vSfx; document.getElementById('igs-vol-sfx-val').textContent     = vSfx + '%'; }
+            const vStk = Math.round(_stickerVolume * 100);
+            const sStk = document.getElementById('igs-vol-sticker');
+            if (sStk) { sStk.value = vStk; document.getElementById('igs-vol-sticker-val').textContent = vStk + '%'; }
             const t1 = document.getElementById('igs-toggle-province-tooltip');
             const t2 = document.getElementById('igs-toggle-deck-province-label');
             if (t1) t1.checked = _showProvinceTooltip;
@@ -13626,6 +13651,9 @@
             document.getElementById('vol-bgmusic2-val').textContent = v2 + '%';
             document.getElementById('vol-sfx').value = vSfx;
             document.getElementById('vol-sfx-val').textContent = vSfx + '%';
+            const vStk = Math.round(_stickerVolume * 100);
+            document.getElementById('vol-sticker').value = vStk;
+            document.getElementById('vol-sticker-val').textContent = vStk + '%';
             // Sinkronkan toggle tooltip provinsi & label deck
             const toggleTip = document.getElementById('toggle-province-tooltip');
             if (toggleTip) toggleTip.checked = _showProvinceTooltip;
@@ -13694,6 +13722,20 @@
             document.getElementById('vol-sfx-val').textContent = val + '%';
             const s = document.getElementById('igs-vol-sfx'); if (s) s.value = val;
             const sv = document.getElementById('igs-vol-sfx-val'); if (sv) sv.textContent = val + '%';
+        }
+
+        function applyVolumeSticker(val) {
+            _stickerVolume = parseInt(val) / 100;
+            localStorage.setItem('cgn_vol_sticker', val);
+            const el1 = document.getElementById('vol-sticker-val'); if (el1) el1.textContent = val + '%';
+            const el2 = document.getElementById('igs-vol-sticker-val'); if (el2) el2.textContent = val + '%';
+            const s1 = document.getElementById('vol-sticker'); if (s1) s1.value = val;
+            const s2 = document.getElementById('igs-vol-sticker'); if (s2) s2.value = val;
+            // Terapkan langsung ke video stiker yang sedang tampil (kalau ada)
+            if (_stickerCurrentEl) {
+                const v = _stickerCurrentEl.querySelector('video');
+                if (v) v.volume = _stickerVolume;
+            }
         }
 
         async function saveMatchResult(myRank) {

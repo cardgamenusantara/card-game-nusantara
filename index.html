@@ -926,10 +926,11 @@
 
         /* KARTU STIKER YANG MUNCUL — persis di bawah area notifikasi (game-notification) */
         #sticker-anchor-desktop {
-            /* [FIX] absolute (relatif ke .top-card-area yang position:relative) — BUKAN fixed.
-               Fixed membuat kartu menempel ke layar dan tidak ikut scroll bersama panel,
-               sehingga terlihat menutupi/tertutupi konten seperti player-area saat panel di-scroll. */
-            position: absolute; top: 0; right: 0; z-index: 10000;
+            /* [FIX FINAL] Sekarang elemen ini anak langsung <body> (lihat markup), jadi position:fixed
+               di sini sudah benar-benar relatif ke layar sungguhan — sama seperti game-notification
+               (yang juga document.body.appendChild + position:fixed; right:20px; top:20px;).
+               top:88px = 20px (top notifikasi) + kira-kira tinggi 1 notifikasi + jarak, jadi persis di bawahnya. */
+            position: fixed; right: 20px; top: 88px; z-index: 10000;
             display: flex; flex-direction: column; align-items: flex-end;
             pointer-events: none; /* biar tidak menghalangi klik ke elemen di bawahnya saat kosong */
         }
@@ -5567,8 +5568,6 @@
                         <span class="sticker-cooldown-num" id="sticker-cooldown-num"></span>
                     </button>
                     <div class="top-cards" id="top-cards"></div>
-                    <!-- Kartu stiker (desktop): tampil di bawah area notifikasi kanan-atas -->
-                    <div id="sticker-anchor-desktop"></div>
                 </div>
 
                 <!-- AREA PEMAIN -->
@@ -5703,6 +5702,11 @@
             <div class="province-cards-grid" id="province-cards-grid"></div>
         </div>
     </div>
+
+    <!-- Kartu stiker (desktop): anak langsung <body>, SAMA PERSIS seperti cara game-notification
+         dibuat (document.body.appendChild) — supaya position:fixed-nya benar-benar relatif ke
+         layar sungguhan, bukan terkurung oleh backdrop-filter milik .top-card-area -->
+    <div id="sticker-anchor-desktop"></div>
 
     <!-- POPUP PEMILIH STIKER -->
     <div class="sticker-popup-overlay" id="sticker-popup-overlay">

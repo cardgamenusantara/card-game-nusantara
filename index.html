@@ -932,7 +932,7 @@
         @media (max-width: 768px) { #sticker-anchor-desktop { display: none; } }
         #sticker-anchor-mobile { width: 100%; margin-top: 4px; }
         .sticker-card {
-            background: linear-gradient(135deg,#2c2c54 0%,#1b1b3a 100%);
+            background: #1b1b3a;
             border: 2px solid rgba(255,255,255,0.35); border-radius: 12px;
             padding: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             width: 240px; max-width: 78vw; box-sizing: border-box;
@@ -945,7 +945,7 @@
         }
         .sticker-card video {
             width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover;
-            border-radius: 8px; display: block; background: #000;
+            border-radius: 8px; display: block; background: #1b1b3a;
         }
         .sticker-card-in { animation: slideInRight 0.3s ease-out; }
         .sticker-card-out { animation: slideOutRight 0.3s ease-out; }
@@ -11484,10 +11484,10 @@
         //   - gambar/stiker/<id>.png  → gambar diam, dipakai sebagai pilihan di popup
         //   - gambar/stiker/<id>.mp4  → video landscape + suara, dipakai saat stiker muncul di bawah game-notification
         const STICKER_LIST = [
+            { id: 'nangis',  label: 'Nangis' },
             { id: 'jempol',  label: 'Jempol' },
             { id: 'tertawa', label: 'Tertawa' },
-            { id: 'kaget',   label: 'Kaget' },
-            { id: 'cinta',   label: 'Cinta' }
+            { id: 'tengil',  label: 'Tengil' }
         ];
         const STICKER_COOLDOWN_MS = 3000;
         const STICKER_DISPLAY_MAX_MS = 6000; // batas aman jika event 'ended' video tidak terpicu

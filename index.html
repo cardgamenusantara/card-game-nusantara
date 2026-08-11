@@ -915,6 +915,10 @@
         .sticker-popup-item:hover:not(:disabled) { transform: scale(1.06); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
         .sticker-popup-item:disabled { opacity: 0.4; cursor: not-allowed; }
         .sticker-popup-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; pointer-events: none; display: block; }
+        .sticker-item-fallback {
+            width: 100%; height: 100%; align-items: center; justify-content: center;
+            font-size: 2.2em; background: rgba(0,0,0,0.06); border-radius: 6px;
+        }
         .sticker-popup-item .sticker-item-label {
             position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); color: #fff;
             font-size: 0.72em; text-align: center; padding: 2px 0; font-family: 'Segoe UI', sans-serif;
@@ -10863,7 +10867,9 @@
             const stickerBtn = document.getElementById('sticker-btn');
             if (stickerBtn) {
                 stickerBtn.style.backgroundImage = `url('${av('gambar/stiker/tombol_stiker.png')}')`;
-                stickerBtn.style.display = gs.currentProvince ? 'flex' : 'none';
+                // Tombol stiker selalu tampil selama match aktif (tidak tergantung currentProvince,
+                // beda dengan province-info-btn yang memang hanya relevan saat ada kartu provinsi aktif)
+                stickerBtn.style.display = 'flex';
                 if (!stickerBtn._listenerAdded) { stickerBtn.addEventListener('click', openStickerPopup); stickerBtn._listenerAdded = true; }
             }
             const stickerCloseBtn = document.getElementById('sticker-popup-close');
@@ -11501,7 +11507,8 @@
                 btn.dataset.stickerId = s.id;
                 btn.innerHTML = `
                     <img src="${av(`gambar/stiker/${s.id}.png`)}" alt="${s.label}"
-                         onerror="this.closest('.sticker-popup-item').style.display='none'">
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="sticker-item-fallback" style="display:none;">😀</div>
                     <span class="sticker-item-label">${s.label}</span>
                 `;
                 btn.addEventListener('click', () => sendSticker(s.id));
@@ -12617,7 +12624,7 @@
             // dapat ditambahkan kembali di pertandingan berikutnya.
             // Tanpa ini, tombol info/refresh tidak merespon setelah match ke-2+
             // karena flag _listenerAdded = true tetap tersisa di elemen DOM.
-            ['province-info-btn', 'sync-refresh-btn', 'province-info-close'].forEach(id => {
+            ['province-info-btn', 'sync-refresh-btn', 'province-info-close', 'sticker-btn', 'sticker-popup-close'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el._listenerAdded = false;
             });
@@ -12721,7 +12728,9 @@
             const stickerBtn = document.getElementById('sticker-btn');
             if (stickerBtn) {
                 stickerBtn.style.backgroundImage = `url('${av('gambar/stiker/tombol_stiker.png')}')`;
-                stickerBtn.style.display = gameState.currentProvince ? 'flex' : 'none';
+                // Tombol stiker selalu tampil selama match aktif (tidak tergantung currentProvince,
+                // beda dengan province-info-btn yang memang hanya relevan saat ada kartu provinsi aktif)
+                stickerBtn.style.display = 'flex';
                 if (!stickerBtn._listenerAdded) { stickerBtn.addEventListener('click', openStickerPopup); stickerBtn._listenerAdded = true; }
             }
             const stickerCloseBtn2 = document.getElementById('sticker-popup-close');

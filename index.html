@@ -862,6 +862,92 @@
         .sync-refresh-btn.success { background: rgba(76,175,80,0.9); border-color: #fff; }
         @keyframes pulseUrgent { 0%,100%{box-shadow:0 4px 10px rgba(244,67,54,0.4);transform:scale(1);} 50%{box-shadow:0 8px 25px rgba(244,67,54,0.8);transform:scale(1.05);} }
 
+        /* TOMBOL STIKER — persis di bawah province-info-btn */
+        .sticker-btn {
+            position: absolute; top: 116px; left: 8px;
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.3) center/70% no-repeat;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 8px; display: none; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1.2em; transition: all 0.3s;
+            -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); z-index: 5; padding: 0; line-height: 1;
+        }
+        .sticker-btn:hover:not(.on-cooldown) { background-color: rgba(255,255,255,0.5); transform: scale(1.1); }
+        .sticker-btn.on-cooldown { cursor: not-allowed; opacity: 0.55; }
+        .sticker-btn .sticker-cooldown-num {
+            position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+            font-size: 0.85em; font-weight: bold; color: #fff; background: rgba(0,0,0,0.45);
+            border-radius: 6px; font-family: 'Segoe UI', sans-serif;
+        }
+        .sticker-btn.on-cooldown .sticker-cooldown-num { display: flex; }
+
+        /* POPUP PEMILIH STIKER */
+        .sticker-popup-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); z-index: 99996;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .sticker-popup-overlay.active { display: flex; }
+        .sticker-popup-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 18px; padding: 20px; max-width: 420px; width: 92%;
+            max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s;
+        }
+        .sticker-popup-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.3);
+        }
+        .sticker-popup-header h3 { color: #fff; margin: 0; font-size: 1.2em; }
+        .sticker-popup-close {
+            width: 34px; height: 34px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1.3em; color: #fff; transition: all 0.3s; flex-shrink: 0;
+        }
+        .sticker-popup-close:hover { background: rgba(255,255,255,0.4); transform: rotate(90deg); }
+        .sticker-popup-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+        }
+        .sticker-popup-item {
+            background: rgba(255,255,255,0.9); border: none; border-radius: 10px; padding: 6px;
+            cursor: pointer; transition: all 0.2s; aspect-ratio: 16/9; overflow: hidden; position: relative;
+        }
+        .sticker-popup-item:hover:not(:disabled) { transform: scale(1.06); box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+        .sticker-popup-item:disabled { opacity: 0.4; cursor: not-allowed; }
+        .sticker-popup-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; pointer-events: none; display: block; }
+        .sticker-popup-item .sticker-item-label {
+            position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); color: #fff;
+            font-size: 0.72em; text-align: center; padding: 2px 0; font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* KARTU STIKER YANG MUNCUL — persis di bawah area notifikasi (game-notification) */
+        #sticker-anchor-desktop {
+            position: fixed; right: 20px; top: 88px; z-index: 9999;
+            display: flex; flex-direction: column; align-items: flex-end;
+        }
+        @media (max-width: 768px) { #sticker-anchor-desktop { display: none; } }
+        #sticker-anchor-mobile { width: 100%; margin-top: 4px; }
+        .sticker-card {
+            background: linear-gradient(135deg,#2c2c54 0%,#1b1b3a 100%);
+            border: 2px solid rgba(255,255,255,0.35); border-radius: 12px;
+            padding: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            width: 240px; max-width: 78vw; box-sizing: border-box;
+        }
+        .sticker-card-mobile { width: 100% !important; max-width: 100% !important; }
+        .sticker-card-name {
+            color: #fff; font-weight: bold; font-size: 0.82em; text-align: center;
+            margin-bottom: 4px; font-family: 'Segoe UI', sans-serif;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sticker-card video {
+            width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover;
+            border-radius: 8px; display: block; background: #000;
+        }
+        .sticker-card-in { animation: slideInRight 0.3s ease-out; }
+        .sticker-card-out { animation: slideOutRight 0.3s ease-out; }
+        .sticker-card-in.sticker-card-mobile { animation: mobileNotifIn 0.3s ease-out; }
+        .sticker-card-out.sticker-card-mobile { animation: mobileNotifOut 0.3s ease-out; }
+
         /* PROCESSING NOTIFICATION */
         .processing-notification {
             display: none; position: fixed;
@@ -5456,6 +5542,8 @@
                 </div>
                 <!-- Anchor notifikasi game (mobile: muncul di bawah panel koneksi) -->
                 <div id="mobile-notif-anchor"></div>
+                <!-- Anchor kartu stiker (mobile: tepat di bawah game-notification) -->
+                <div id="sticker-anchor-mobile"></div>
             </div>
 
             <!-- PANEL KANAN -->
@@ -5466,7 +5554,12 @@
                     <div class="province-label" id="province-label">Menunggu kartu...</div>
                     <button class="sync-refresh-btn" id="sync-refresh-btn" title="Refresh & sinkronisasi">🔄</button>
                     <button class="province-info-btn" id="province-info-btn" title="Lihat semua kartu provinsi">ℹ️</button>
+                    <button class="sticker-btn" id="sticker-btn" title="Kirim stiker">
+                        <span class="sticker-cooldown-num" id="sticker-cooldown-num"></span>
+                    </button>
                     <div class="top-cards" id="top-cards"></div>
+                    <!-- Kartu stiker (desktop): tampil di bawah area notifikasi kanan-atas -->
+                    <div id="sticker-anchor-desktop"></div>
                 </div>
 
                 <!-- AREA PEMAIN -->
@@ -5599,6 +5692,17 @@
                 <div class="province-info-close" id="province-info-close">✕</div>
             </div>
             <div class="province-cards-grid" id="province-cards-grid"></div>
+        </div>
+    </div>
+
+    <!-- POPUP PEMILIH STIKER -->
+    <div class="sticker-popup-overlay" id="sticker-popup-overlay">
+        <div class="sticker-popup-content">
+            <div class="sticker-popup-header">
+                <h3>😄 Pilih Stiker</h3>
+                <div class="sticker-popup-close" id="sticker-popup-close">✕</div>
+            </div>
+            <div class="sticker-popup-grid" id="sticker-popup-grid"></div>
         </div>
     </div>
 
@@ -9998,6 +10102,10 @@
 
         function handleServerMessage(data) {
             switch (data.type) {
+                case 'STICKER_RECEIVED':
+                    enqueueSticker(data);
+                    break;
+
                 case 'PARTY_SEARCH_CANCELLED': {
                     // Salah satu anggota party membatalkan dari sisi server (via LEAVE_QUEUE)
                     // Hentikan pencarian dan kembalikan ke lobi party
@@ -10751,6 +10859,19 @@
                 if (!infoBtn._listenerAdded) { infoBtn.addEventListener('click', () => { playSound('button'); showProvinceInfo(); }); infoBtn._listenerAdded = true; }
             }
 
+            // Tombol stiker
+            const stickerBtn = document.getElementById('sticker-btn');
+            if (stickerBtn) {
+                stickerBtn.style.backgroundImage = `url('${av('gambar/stiker/tombol_stiker.png')}')`;
+                stickerBtn.style.display = gs.currentProvince ? 'flex' : 'none';
+                if (!stickerBtn._listenerAdded) { stickerBtn.addEventListener('click', openStickerPopup); stickerBtn._listenerAdded = true; }
+            }
+            const stickerCloseBtn = document.getElementById('sticker-popup-close');
+            if (stickerCloseBtn && !stickerCloseBtn._listenerAdded) {
+                stickerCloseBtn.addEventListener('click', closeStickerPopup);
+                stickerCloseBtn._listenerAdded = true;
+            }
+
             // Close province info modal (spectator path)
             const closeBtn = document.getElementById('province-info-close');
             if (closeBtn && !closeBtn._listenerAdded) {
@@ -11347,6 +11468,153 @@
             modal.classList.remove('active');
             modal.classList.remove('spectator-mode');
             // Jangan reset _specActiveProvince agar tab yang sama terpilih saat buka ulang
+        }
+
+        // =============================================
+        // FITUR STIKER
+        // =============================================
+        // Daftar stiker — HARUS SAMA PERSIS (id) dengan STICKER_IDS di server.js.
+        // Setiap id butuh 2 file:
+        //   - gambar/stiker/<id>.png  → gambar diam, dipakai sebagai pilihan di popup
+        //   - gambar/stiker/<id>.mp4  → video landscape + suara, dipakai saat stiker muncul di bawah game-notification
+        const STICKER_LIST = [
+            { id: 'jempol',  label: 'Jempol' },
+            { id: 'tertawa', label: 'Tertawa' },
+            { id: 'kaget',   label: 'Kaget' },
+            { id: 'cinta',   label: 'Cinta' }
+        ];
+        const STICKER_COOLDOWN_MS = 3000;
+        const STICKER_DISPLAY_MAX_MS = 6000; // batas aman jika event 'ended' video tidak terpicu
+        let _stickerCooldownUntil = 0;
+        let _stickerCooldownTimer = null;
+        let _stickerPopupBuilt = false;
+
+        function _isMobileSticker() { return window.innerWidth <= 768; }
+
+        function _buildStickerPopup() {
+            if (_stickerPopupBuilt) return;
+            const grid = document.getElementById('sticker-popup-grid');
+            grid.innerHTML = '';
+            STICKER_LIST.forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = 'sticker-popup-item';
+                btn.dataset.stickerId = s.id;
+                btn.innerHTML = `
+                    <img src="${av(`gambar/stiker/${s.id}.png`)}" alt="${s.label}"
+                         onerror="this.closest('.sticker-popup-item').style.display='none'">
+                    <span class="sticker-item-label">${s.label}</span>
+                `;
+                btn.addEventListener('click', () => sendSticker(s.id));
+                grid.appendChild(btn);
+            });
+            _stickerPopupBuilt = true;
+        }
+
+        function openStickerPopup() {
+            if (Date.now() < _stickerCooldownUntil) return; // masih cooldown, popup tidak dibuka
+            playSound('button');
+            _buildStickerPopup();
+            document.getElementById('sticker-popup-overlay').classList.add('active');
+        }
+
+        function closeStickerPopup() {
+            playSound('x');
+            document.getElementById('sticker-popup-overlay').classList.remove('active');
+        }
+
+        function _setStickerButtonCooldown(ms) {
+            const btn = document.getElementById('sticker-btn');
+            const num = document.getElementById('sticker-cooldown-num');
+            if (!btn) return;
+            _stickerCooldownUntil = Date.now() + ms;
+            btn.classList.add('on-cooldown');
+            clearInterval(_stickerCooldownTimer);
+            const tick = () => {
+                const remaining = Math.ceil((_stickerCooldownUntil - Date.now()) / 1000);
+                if (remaining <= 0) {
+                    clearInterval(_stickerCooldownTimer);
+                    btn.classList.remove('on-cooldown');
+                    if (num) num.textContent = '';
+                } else if (num) {
+                    num.textContent = remaining;
+                }
+            };
+            tick();
+            _stickerCooldownTimer = setInterval(tick, 250);
+        }
+
+        function sendSticker(stickerId) {
+            // Jaga-jaga: cek cooldown di klien juga (server tetap validasi ulang, ini hanya untuk UX cepat)
+            if (Date.now() < _stickerCooldownUntil) return;
+            if (!ws || ws.readyState !== 1 || !currentRoomId) return;
+            try {
+                ws.send(JSON.stringify({ type: 'SEND_STICKER', roomId: currentRoomId, stickerId }));
+            } catch (e) { return; }
+            playSound('button');
+            _setStickerButtonCooldown(STICKER_COOLDOWN_MS);
+            closeStickerPopup();
+        }
+
+        // ─── ANTRIAN TAMPILAN STIKER MASUK (dari WS) ──────────────────────────
+        // Sama seperti antrian notifikasi teks (_notifQueue): jika beberapa pemain
+        // mengirim stiker hampir bersamaan, semuanya tetap tampil satu-per-satu,
+        // bergantian, tidak saling tumpang tindih.
+        const _stickerQueue = [];
+        let _stickerBusy = false;
+        let _stickerCurrentEl = null;
+
+        function enqueueSticker(data) {
+            const def = STICKER_LIST.find(s => s.id === data.stickerId);
+            if (!def) return; // id tidak dikenal klien ini, abaikan dengan aman
+            _stickerQueue.push({ playerName: data.playerName || 'Pemain', stickerId: data.stickerId });
+            _processStickerQueue();
+        }
+
+        function _dismissCurrentSticker(then) {
+            if (!_stickerCurrentEl) { then && then(); return; }
+            const el = _stickerCurrentEl;
+            el.classList.remove('sticker-card-in');
+            el.classList.add('sticker-card-out');
+            setTimeout(() => {
+                el.remove();
+                _stickerCurrentEl = null;
+                _stickerBusy = false;
+                then && then();
+            }, 300);
+        }
+
+        function _processStickerQueue() {
+            if (_stickerBusy || _stickerQueue.length === 0) return;
+            _stickerBusy = true;
+            const item = _stickerQueue.shift();
+            const mobile = _isMobileSticker();
+
+            const card = document.createElement('div');
+            card.className = 'sticker-card sticker-card-in' + (mobile ? ' sticker-card-mobile' : '');
+            card.innerHTML = `
+                <div class="sticker-card-name">🙋 ${_shortName(item.playerName)}</div>
+                <video src="${av(`gambar/stiker/${item.stickerId}.mp4`)}" autoplay playsinline></video>
+            `;
+
+            const anchor = document.getElementById(mobile ? 'sticker-anchor-mobile' : 'sticker-anchor-desktop');
+            if (!anchor) { _stickerBusy = false; return; }
+            anchor.innerHTML = '';
+            anchor.appendChild(card);
+            _stickerCurrentEl = card;
+
+            const video = card.querySelector('video');
+            let advanced = false;
+            const advance = () => {
+                if (advanced) return;
+                advanced = true;
+                _dismissCurrentSticker(_processStickerQueue);
+            };
+            // Coba putar dengan suara; jika browser memblokir autoplay bersuara, tetap lanjut diam-diam.
+            const p = video.play();
+            if (p && p.catch) p.catch(() => {});
+            video.addEventListener('ended', advance);
+            video.addEventListener('error', advance);
+            setTimeout(advance, STICKER_DISPLAY_MAX_MS); // jaring pengaman durasi maksimum
         }
 
         // =============================================
@@ -12447,6 +12715,19 @@
             if (!infoBtn._listenerAdded) {
                 infoBtn.addEventListener('click', () => { playSound('button'); showProvinceInfo(); });
                 infoBtn._listenerAdded = true;
+            }
+
+            // Tombol stiker
+            const stickerBtn = document.getElementById('sticker-btn');
+            if (stickerBtn) {
+                stickerBtn.style.backgroundImage = `url('${av('gambar/stiker/tombol_stiker.png')}')`;
+                stickerBtn.style.display = gameState.currentProvince ? 'flex' : 'none';
+                if (!stickerBtn._listenerAdded) { stickerBtn.addEventListener('click', openStickerPopup); stickerBtn._listenerAdded = true; }
+            }
+            const stickerCloseBtn2 = document.getElementById('sticker-popup-close');
+            if (stickerCloseBtn2 && !stickerCloseBtn2._listenerAdded) {
+                stickerCloseBtn2.addEventListener('click', closeStickerPopup);
+                stickerCloseBtn2._listenerAdded = true;
             }
 
             // Refresh button listener

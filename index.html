@@ -4101,7 +4101,7 @@
             <div id="match-starting" style="display:none;">
                 <div id="provinces-preview">
                     <div class="prov-preview-title">✅ Lawan Ditemukan!</div>
-                    <div class="prov-preview-subtitle">12 Provinsi yang akan dimainkan di match ini:</div>
+                    <div class="prov-preview-subtitle">12 Provinsi yang akan dimainkan di pertandingan ini:</div>
                     <div class="prov-grid" id="prov-grid"></div>
                     <div class="prov-countdown">Game dimulai dalam <span id="prov-countdown-num">6</span> detik...</div>
                 </div>
@@ -10788,6 +10788,18 @@
             gameState = newState;
             _prevPhase = newState.phase;
 
+            // [BUG FIX] Server SELALU menyertakan `isCustomRoom` di dalam setiap payload
+            // state (lihat getFullState() di server: `isCustomRoom: this.isCustomRoom`).
+            // Sinkronkan ulang flag lokal `_isCustomRoom` di SETIAP update state (bukan cuma
+            // saat GAME_STARTED/reconnect) — supaya kalaupun _isCustomRoom sempat "nyasar"
+            // salah nilai gara-gara timing/reconnect di suatu titik, ia otomatis terkoreksi
+            // lagi begitu update state berikutnya datang, alih-alih tetap salah sampai
+            // match-result-modal ditampilkan (yang menyebabkan rank/EXP palsu ikut tampil
+            // di custom match/tantang).
+            if (typeof newState.isCustomRoom !== 'undefined') {
+                _isCustomRoom = !!newState.isCustomRoom;
+            }
+
             // [SIMPLE] Tampilkan/sembunyikan indikator AFK berdasarkan state server
             if (!_isSpectator && myPlayerId && newState.players) {
                 const _me = newState.players.find(p => p.id === myPlayerId);
@@ -10823,6 +10835,19 @@
                             showNotification(`${medal} ${_shortName(p.name)} menang! Peringkat ${p.rank}`);
                         } else {
                             showNotification(`🏳️ ${_shortName(p.name)} menyerah! Peringkat ${p.rank}`);
+                        }
+                        // [AUTO SHOW HASIL] Saat pemain (ranked maupun custom match) baru saja
+                        // selesai — entah karena kartunya habis (menang) atau menyerah —
+                        // langsung tampilkan match-result-modal secara otomatis.
+                        // Tombol "🏆 Hasil Pertandingan" (btn-show-result) tetap ada/berfungsi
+                        // seperti biasa untuk membuka lagi modal ini kapan saja.
+                        // Guard `_endGameShown`: jika pertandingan sudah benar-benar berakhir
+                        // (GAME_OVER sudah diproses & game-over-modal tampil), jangan buka lagi
+                        // match-result-modal di atasnya.
+                        if (!_isSpectator && myPlayerId && p.id === myPlayerId) {
+                            setTimeout(() => {
+                                if (!_endGameShown) showMatchResult();
+                            }, 700);
                         }
                     }
                 });
@@ -12320,8 +12345,14 @@
             if (!list) return;
 
             // Tambahkan bot dengan ping simulasi ~99ms agar terlihat seperti pemain
-            const allPings = [...pings];
-            if (gameState && gameState.players) {
+            // [KHUSUS CUSTOM MATCH/TANTANG] Bot tidak perlu ditampilkan di panel koneksi
+            // sama sekali — baik entri bot yang datang dari server (pings[]) maupun
+            // entri simulasi lokal, keduanya di-skip.
+            const _botIds = (gameState && gameState.players)
+                ? new Set(gameState.players.filter(p => p.isBot).map(p => p.id))
+                : new Set();
+            let allPings = _isCustomRoom ? pings.filter(p => !_botIds.has(p.id)) : [...pings];
+            if (!_isCustomRoom && gameState && gameState.players) {
                 gameState.players.forEach(p => {
                     if (p.isBot && !allPings.find(x => x.id === p.id)) {
                         const base = 88 + (p.id.charCodeAt(p.id.length - 1) % 22); // 88–110ms, stabil per bot
@@ -13173,18 +13204,14 @@
                 return;
             }
 
-            // Tampilkan pilihan: lanjut menonton atau lihat hasil
+            // [AUTO SHOW HASIL] match-result-modal akan otomatis tampil begitu server
+            // mengonfirmasi status winner (lihat updateGameUI). Ini fallback jaga-jaga
+            // apabila konfirmasi server datang lebih lambat dari perkiraan — modal
+            // tetap otomatis terbuka tanpa perlu memilih dulu di surrender-choice-modal.
             setTimeout(() => {
-                const scModal = document.getElementById('surrender-choice-modal');
-                // Jika game sedang dijeda, sembunyikan tombol "Lanjut Menonton"
-                // karena tidak bisa menonton saat host menjeda
-                const btnWatch = document.getElementById('btn-surrender-watch');
-                if (btnWatch) {
-                    const isPaused = gameState && gameState.isPaused;
-                    btnWatch.style.display = isPaused ? 'none' : '';
-                }
-                scModal.classList.add('active');
-            }, 600);
+                const p = (gameState && myPlayerId) ? gameState.players.find(pl => pl.id === myPlayerId) : null;
+                if (p && p.winner && !_endGameShown) showMatchResult();
+            }, 900);
         }
 
         // Fungsi khusus: klik "Hasil Pertandingan" dari surrender-choice-modal

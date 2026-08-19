@@ -654,6 +654,8 @@
             min-height: 180px; max-height: 180px;
         }
         .card:hover { transform: translateY(-8px) scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .card.magis       { border: 2px solid #c62828; background: linear-gradient(135deg, #ffcdd2 0%, #ef5350 100%); }
+        .card.sakral      { border: 2px solid #e91e63; background: linear-gradient(135deg, #fce4ec 0%, #f48fb1 100%); }
         .card.mythic      { border: 2px solid #ff6d00; background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%); }
         .card.legendary   { border: 2px solid #ffd700; background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%); }
         .card.epic        { border: 2px solid #9c27b0; background: linear-gradient(135deg, #e1bee7 0%, #ce93d8 100%); }
@@ -720,7 +722,14 @@
             overflow: hidden; font-size: 2.2em;
         }
         .card-image img { width:100%; height:100%; object-fit: cover; object-position:center; border-radius:4px; }
-        .card-rarity { position: absolute; top: 4px; right: 4px; font-size: 1.1em; }
+        .card-rarity {
+            position: absolute; top: 4px; right: 4px; font-size: 1.1em;
+            width: 20%; aspect-ratio: 1 / 1; min-width: 16px; max-width: 28px;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+        }
+        .rarity-logo-img { display: block; width: 100%; height: 100%; object-fit: contain; }
+        .rarity-logo-inline { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; object-fit: contain; }
         .card-name {
             font-size: 0.82em; font-weight: bold; text-align: center;
             line-height: 1.15; flex-grow: 1;
@@ -924,6 +933,138 @@
             font-size: 0.72em; text-align: center; padding: 2px 0; font-family: 'Segoe UI', sans-serif;
         }
 
+        /* ======================= POPUP VOTING HAK TAHAP 1 ======================= */
+        .voting-popup-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.82); z-index: 99997;
+            align-items: center; justify-content: center; padding: 16px;
+        }
+        .voting-popup-overlay.active { display: flex; }
+        .voting-popup-content {
+            background: linear-gradient(135deg, #1b1b3a 0%, #2d1b4a 100%);
+            border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 20px; padding: 24px 20px; max-width: 560px; width: 96%;
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 60px rgba(0,0,0,0.6);
+            animation: slideIn 0.3s; text-align: center;
+        }
+        .voting-popup-title {
+            color: #fff; font-size: 1.3em; font-weight: bold; margin: 0 0 4px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .voting-popup-subtitle {
+            color: rgba(255,255,255,0.7); font-size: 0.85em; margin: 0 0 14px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .voting-popup-timer {
+            width: 62px; height: 62px; border-radius: 50%; margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5em; font-weight: bold; color: #fff; font-family: 'Segoe UI', sans-serif;
+            background: conic-gradient(#ffc107 var(--voting-pct, 100%), rgba(255,255,255,0.12) 0);
+            transition: background 1s linear;
+            position: relative;
+        }
+        .voting-popup-timer::before {
+            content: ''; position: absolute; inset: 6px; border-radius: 50%; background: #1b1b3a;
+        }
+        .voting-popup-timer span { position: relative; z-index: 1; }
+        .voting-popup-timer.urgent { animation: votingTimerPulse 0.6s infinite; }
+        @keyframes votingTimerPulse { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.08); } }
+
+        .voting-popup-slots {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 10px;
+            margin-bottom: 18px;
+        }
+        .voting-slot {
+            background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.15);
+            border-radius: 12px; padding: 8px 4px; transition: all 0.3s;
+        }
+        .voting-slot.voted-hidden { border-color: rgba(255,193,7,0.6); background: rgba(255,193,7,0.08); }
+        .voting-slot.is-me { border-color: rgba(76,175,80,0.7); }
+        .voting-slot-name {
+            color: #fff; font-size: 0.72em; font-weight: 600; margin-bottom: 6px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .voting-slot-icon {
+            width: 44px; height: 44px; margin: 0 auto; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.6em;
+            background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.25);
+            transition: all 0.3s;
+        }
+        .voting-slot.voted-hidden .voting-slot-icon {
+            background: linear-gradient(135deg,#5a4a1a,#3a2f0f); border-style: solid; border-color: #ffc107;
+        }
+        .voting-slot.revealed .voting-slot-icon {
+            background: rgba(255,255,255,0.9); border-style: solid; animation: votingReveal 0.4s ease-out;
+        }
+        .voting-slot.win .voting-slot-icon { border-color: #4caf50; box-shadow: 0 0 14px rgba(76,175,80,0.6); }
+        .voting-slot.lose .voting-slot-icon { opacity: 0.4; }
+        @keyframes votingReveal { from { transform: rotateY(90deg); } to { transform: rotateY(0deg); } }
+
+        .voting-popup-choices {
+            display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+        }
+        .voting-choice-btn {
+            flex: 1; min-width: 110px; max-width: 160px; padding: 14px 10px; border-radius: 14px;
+            border: 2px solid rgba(255,255,255,0.25); cursor: pointer; font-size: 1em; font-weight: bold;
+            font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; gap: 6px;
+            transition: all 0.2s; background: rgba(255,255,255,0.08); color: #fff;
+        }
+        .voting-choice-btn .voting-choice-emoji { font-size: 1.8em; }
+        .voting-choice-btn:hover:not(:disabled) { transform: translateY(-3px); background: rgba(255,255,255,0.18); }
+        .voting-choice-btn.selected { border-color: #4caf50; background: rgba(76,175,80,0.25); }
+        .voting-choice-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ============================================ */
+        /* KARTU VOTING POTRAIT (Putih/Hitam) + BINGKAI  */
+        /* Aset gambar (gambar/voting/kartu_putih.png / kartu_hitam.png) dicoba
+           dimuat otomatis; kalau belum ada, jatuh ke bentuk shape hitam/putih polos.
+           Ukuran memakai clamp()/aspect-ratio supaya otomatis menyesuaikan lebar layar. */
+        /* ============================================ */
+        .voting-choice-btn.voting-card-shape {
+            flex: 0 0 auto; width: clamp(78px, 24vw, 112px); min-width: 0; max-width: none;
+            aspect-ratio: 5 / 7; padding: 0; border-radius: 12px;
+            border-width: 5px; border-style: solid; border-color: #c9a03e;
+            background-color: rgba(255,255,255,0.06);
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            justify-content: flex-end; align-items: stretch; gap: 0;
+            position: relative; overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.15);
+        }
+        .voting-choice-btn.voting-card-shape.putih-shape { background-color: #f2f2f2; }
+        .voting-choice-btn.voting-card-shape.hitam-shape { background-color: #161616; }
+        .voting-choice-btn.voting-card-shape .voting-choice-emoji { display: none; }
+        .voting-choice-btn.voting-card-shape .voting-card-tag {
+            display: block; width: 100%; text-align: center;
+            font-size: 0.72em; font-weight: 700; color: #fff; letter-spacing: 0.3px;
+            padding: 6px 2px; background: rgba(0,0,0,0.5); text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+        .voting-choice-btn.voting-card-shape:hover:not(:disabled) {
+            transform: translateY(-4px) scale(1.03); box-shadow: 0 10px 22px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(255,255,255,0.2);
+        }
+        .voting-choice-btn.voting-card-shape.selected {
+            border-color: #4caf50; box-shadow: 0 0 0 3px rgba(76,175,80,0.5), 0 8px 20px rgba(0,0,0,0.45);
+        }
+
+        /* Versi kecil untuk slot peserta saat hasil dibuka (reveal) */
+        .voting-slot-icon.card-shape {
+            width: clamp(32px, 11vw, 46px); height: auto; aspect-ratio: 5 / 7;
+            border-radius: 7px; border: 3px solid #c9a03e; border-style: solid;
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+        }
+        .voting-slot-icon.card-shape.putih-shape { background-color: #f2f2f2; }
+        .voting-slot-icon.card-shape.hitam-shape { background-color: #161616; }
+        .voting-slot.win .voting-slot-icon.card-shape { border-color: #4caf50; box-shadow: 0 0 12px rgba(76,175,80,0.6); }
+        .voting-popup-status {
+            color: rgba(255,255,255,0.75); font-size: 0.82em; margin-top: 12px; min-height: 18px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .voting-popup-result {
+            color: #ffc107; font-size: 1.05em; font-weight: bold; margin-top: 10px;
+            font-family: 'Segoe UI', sans-serif; min-height: 20px;
+        }
+
         /* KARTU STIKER YANG MUNCUL — persis di bawah area notifikasi (game-notification) */
         #sticker-anchor-desktop {
             /* [FIX FINAL] Sekarang elemen ini anak langsung <body> (lihat markup), jadi position:fixed
@@ -1021,6 +1162,8 @@
             position: relative; overflow: visible; flex-shrink: 0; margin-top: 15px;
         }
         .province-info-card:hover { transform: translateY(-8px) scale(1.05); }
+        .province-info-card.magis       { border: 2px solid #c62828; background: linear-gradient(135deg, #ffcdd2 0%, #ef5350 100%); }
+        .province-info-card.sakral      { border: 2px solid #e91e63; background: linear-gradient(135deg, #fce4ec 0%, #f48fb1 100%); }
         .province-info-card.mythic      { border: 2px solid #ff6d00; background: linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%); }
         .province-info-card.legendary   { border: 2px solid #ffd700; background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%); }
         .province-info-card.epic        { border: 2px solid #9c27b0; background: linear-gradient(135deg, #e1bee7 0%, #ce93d8 100%); }
@@ -1031,7 +1174,12 @@
         .province-info-card.uncommonplus{ border: 2px solid #4caf50; background: linear-gradient(135deg, #dcedc8 0%, #aed581 100%); }
         .province-info-card.commonplus  { border: 2px solid #81c784; background: linear-gradient(135deg, #f1f8e9 0%, #c5e1a5 100%); }
         .province-info-card.common      { border: 2px solid #9e9e9e; background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%); }
-        .province-info-card-rarity { position: absolute; top: 4px; right: 4px; font-size: 1.1em; }
+        .province-info-card-rarity {
+            position: absolute; top: 4px; right: 4px; font-size: 1.1em;
+            width: 20%; aspect-ratio: 1 / 1; min-width: 16px; max-width: 28px;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+        }
         .province-info-card-image { width:100%; height:72px; background:rgba(0,0,0,0.1); border-radius:6px; margin-bottom:5px; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:2.2em; }
         .province-info-card-image img { width:100%; height:100%; object-fit:contain; border-radius:4px; }
         .province-info-card-name { font-size:0.75em; font-weight:bold; text-align:center; line-height:1.1; flex-grow:1; display:flex; align-items:center; justify-content:center; overflow:hidden; text-overflow:ellipsis; word-wrap:break-word; }
@@ -1695,8 +1843,11 @@
             flex-shrink: 0;
             background: rgba(255,255,255,0.1);
         }
-        .enc-cards-row { display: flex; flex-wrap: wrap; gap: 14px; padding-left: 4px; }
-        .enc-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .enc-cards-row { display: flex; flex-wrap: nowrap; gap: 14px; padding-left: 4px; padding-bottom: 10px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+        .enc-cards-row::-webkit-scrollbar { height: 8px; }
+        .enc-cards-row::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 8px; }
+        .enc-cards-row::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 8px; }
+        .enc-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
         .enc-power-badge {
             font-size: 0.72em; background: rgba(255,255,255,0.2); color: #fff;
             border: 1px solid rgba(255,255,255,0.35); border-radius: 8px;
@@ -1707,6 +1858,8 @@
             border-radius: 8px; padding: 3px 10px;
             border: 1px solid transparent;
         }
+        .enc-rarity-badge.magis       { background: linear-gradient(135deg,#ffcdd2,#c62828); color: #fff; border-color: #c62828; }
+        .enc-rarity-badge.sakral      { background: linear-gradient(135deg,#fce4ec,#e91e63); color: #fff; border-color: #e91e63; }
         .enc-rarity-badge.mythic      { background: linear-gradient(135deg,#fff3e0,#ff6d00); color: #fff; border-color: #ff6d00; }
         .enc-rarity-badge.legendary   { background: linear-gradient(135deg,#fff9c4,#ffd700); color: #5d4037; border-color: #ffd700; }
         .enc-rarity-badge.epic        { background: linear-gradient(135deg,#e1bee7,#9c27b0); color: #fff; border-color: #9c27b0; }
@@ -2027,7 +2180,10 @@
             width: 500px; max-width: 94vw; padding: 0 0 18px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             animation: popIn .18s ease;
+            max-height: 90vh; overflow-y: auto; overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
         }
+        .dl-header { position: sticky; top: 0; z-index: 2; }
         @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* Kartu ensiklopedia interaktif */
@@ -2104,6 +2260,12 @@
         .dl-rate-reset-badge {
             font-size: 0.7em; font-weight: bold; color: #34d399;
             background: rgba(52,211,153,0.18); border: 1px solid rgba(52,211,153,0.45);
+            border-radius: 6px; padding: 1px 6px; margin-left: 6px; white-space: nowrap;
+        }
+        .dl-rate-row.dl-rate-empty { opacity: 0.55; }
+        .dl-rate-empty-badge {
+            font-size: 0.7em; font-weight: bold; color: #f87171;
+            background: rgba(248,113,113,0.15); border: 1px solid rgba(248,113,113,0.4);
             border-radius: 6px; padding: 1px 6px; margin-left: 6px; white-space: nowrap;
         }
         .btn-dl-info {
@@ -4147,18 +4309,20 @@
                 <div class="enc-rule-card" style="border-color:#f093fb;">
                     <span class="enc-rule-icon">🔶</span>
                     <div class="enc-rule-heading">Jenis Kartu & Kekuatannya</div>
-                    <div class="enc-rule-text">Setiap provinsi punya 10 kartu dengan kekuatan berbeda:</div>
+                    <div class="enc-rule-text">Setiap provinsi punya 12 kartu dengan kekuatan berbeda:</div>
                     <div class="enc-rarity-row">
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#fff3e0,#ffcc80);color:#bf360c;">👑 Sumber Daya Alam — Kekuatan 10</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#fff9c4,#fff59d);color:#5d4037;">🔥 Tempat Bersejarah — Kekuatan 9</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e1bee7,#ce93d8);color:#4a148c;">👾 Rumah Adat — Kekuatan 8</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#818cf8,#4338ca);color:#fff;">💎 Sektor Ekonomi — Kekuatan 7</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#bbdefb,#64b5f6);color:#0d47a1;">💙 Senjata Tradisional — Kekuatan 6</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e0f7fa,#80deea);color:#006064;">💠 Pakaian Adat — Kekuatan 5</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#c8e6c9,#81c784);color:#1b5e20;">💚 Alat Musik — Kekuatan 4</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#dcedc8,#aed581);color:#33691e;">🍀 Tarian — Kekuatan 3</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f1f8e9,#c5e1a5);color:#33691e;">🟢 Adat Istiadat — Kekuatan 2</span>
-                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f5f5f5,#e0e0e0);color:#424242;">⚪ Makanan Khas — Kekuatan 1</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#ffcdd2,#ef5350);color:#4a0505;"><span data-rarity-icon="magis"></span> Pakaian Adat — Kekuatan 12</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#fce4ec,#f48fb1);color:#4a0d29;"><span data-rarity-icon="sakral"></span> Adat Istiadat — Kekuatan 11</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#fff3e0,#ffcc80);color:#bf360c;"><span data-rarity-icon="mythic"></span> Sumber Daya Alam — Kekuatan 10</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#fff9c4,#fff59d);color:#5d4037;"><span data-rarity-icon="legendary"></span> Tempat/Bangunan Bersejarah — Kekuatan 9</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e1bee7,#ce93d8);color:#4a148c;"><span data-rarity-icon="epic"></span> Rumah Adat — Kekuatan 8</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#818cf8,#4338ca);color:#fff;"><span data-rarity-icon="rareplus"></span> Sektor Ekonomi — Kekuatan 7</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#bbdefb,#64b5f6);color:#0d47a1;"><span data-rarity-icon="rarestar"></span> Senjata Tradisional — Kekuatan 6</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e0f7fa,#80deea);color:#006064;"><span data-rarity-icon="rare"></span> Bahasa Daerah — Kekuatan 5</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#c8e6c9,#81c784);color:#1b5e20;"><span data-rarity-icon="uncommon"></span> Alat Musik — Kekuatan 4</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#dcedc8,#aed581);color:#33691e;"><span data-rarity-icon="uncommonplus"></span> Tarian — Kekuatan 3</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f1f8e9,#c5e1a5);color:#33691e;"><span data-rarity-icon="commonplus"></span> Produk Unggulan — Kekuatan 2</span>
+                        <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f5f5f5,#e0e0e0);color:#424242;"><span data-rarity-icon="common"></span> Makanan Khas — Kekuatan 1</span>
                     </div>
                 </div>
 
@@ -4186,81 +4350,81 @@
                         <!-- Epic -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#e1bee7 0%,#ce93d8 100%);border:2px solid #9c27b0;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">👾</span>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="epic"></span></span>
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🏠</div>
                                 <div style="font-size:0.55em;text-align:center;color:#6a1b9a;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Rumah Adat</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e1bee7,#ce93d8);color:#4a148c;">👾 Epik</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e1bee7,#ce93d8);color:#4a148c;"><span data-rarity-icon="epic"></span> Epik</span>
                         </div>
 
                         <!-- Rare+ -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#c7d2fe 0%,#818cf8 100%);border:2px solid #4338ca;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">💎</span>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="rareplus"></span></span>
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">💰</div>
                                 <div style="font-size:0.55em;text-align:center;color:#312e81;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Sektor Ekonomi</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#818cf8,#4338ca);color:#fff;">💎 Spesial</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#818cf8,#4338ca);color:#fff;"><span data-rarity-icon="rareplus"></span> Spesial</span>
                         </div>
 
                         <!-- Rare★ -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#bbdefb 0%,#64b5f6 100%);border:2px solid #2196f3;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">💙</span>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="rarestar"></span></span>
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🗡️</div>
                                 <div style="font-size:0.55em;text-align:center;color:#1565c0;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Senjata Tradisional</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#bbdefb,#64b5f6);color:#0d47a1;">💙 Elite</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#bbdefb,#64b5f6);color:#0d47a1;"><span data-rarity-icon="rarestar"></span> Elite</span>
                         </div>
 
                         <!-- Rare -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#e0f7fa 0%,#80deea 100%);border:2px solid #00acc1;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">💠</span>
-                                <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">👘</div>
-                                <div style="font-size:0.55em;text-align:center;color:#00838f;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Pakaian Adat</div>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="rare"></span></span>
+                                <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🗣️</div>
+                                <div style="font-size:0.55em;text-align:center;color:#00838f;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Bahasa Daerah</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e0f7fa,#80deea);color:#006064;">💠 Langka</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#e0f7fa,#80deea);color:#006064;"><span data-rarity-icon="rare"></span> Langka</span>
                         </div>
 
                         <!-- Uncommon -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#c8e6c9 0%,#81c784 100%);border:2px solid #2e7d32;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">💚</span>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="uncommon"></span></span>
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🎵</div>
                                 <div style="font-size:0.55em;text-align:center;color:#2e7d32;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Alat Musik</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#c8e6c9,#81c784);color:#1b5e20;">💚 Umum</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#c8e6c9,#81c784);color:#1b5e20;"><span data-rarity-icon="uncommon"></span> Unik</span>
                         </div>
 
                         <!-- Uncommon+ -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#dcedc8 0%,#aed581 100%);border:2px solid #4caf50;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">🍀</span>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="uncommonplus"></span></span>
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">💃</div>
                                 <div style="font-size:0.55em;text-align:center;color:#558b2f;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Tarian</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#dcedc8,#aed581);color:#33691e;">🍀 Unik</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#dcedc8,#aed581);color:#33691e;"><span data-rarity-icon="uncommonplus"></span> Umum</span>
                         </div>
 
                         <!-- Common+ -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#f1f8e9 0%,#c5e1a5 100%);border:2px solid #81c784;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">🟢</span>
-                                <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🏮</div>
-                                <div style="font-size:0.55em;text-align:center;color:#558b2f;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Adat Istiadat</div>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="commonplus"></span></span>
+                                <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🏆</div>
+                                <div style="font-size:0.55em;text-align:center;color:#558b2f;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Produk Unggulan</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f1f8e9,#c5e1a5);color:#33691e;">🟢 Biasa</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f1f8e9,#c5e1a5);color:#33691e;"><span data-rarity-icon="commonplus"></span> Biasa</span>
                         </div>
 
                         <!-- Common -->
                         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;">
                             <div style="width:105px;height:152px;border-radius:10px;padding:6px;box-shadow:0 6px 12px rgba(0,0,0,0.4);background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%);border:2px solid #9e9e9e;display:flex;flex-direction:column;position:relative;overflow:hidden;">
-                                <span style="position:absolute;top:3px;right:4px;font-size:1em;">⚪</span>
+                                <span style="position:absolute;top:3px;right:4px;font-size:1em;"><span data-rarity-icon="common"></span></span>
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🍜</div>
                                 <div style="font-size:0.55em;text-align:center;color:#616161;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Makanan Khas</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f5f5f5,#e0e0e0);color:#424242;">⚪ Dasar</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#f5f5f5,#e0e0e0);color:#424242;"><span data-rarity-icon="common"></span> Dasar</span>
                         </div>
 
                     </div>
@@ -4268,7 +4432,7 @@
                     <div style="margin-top:16px;background:linear-gradient(135deg,rgba(255,200,0,0.18),rgba(255,80,0,0.15));border:1.5px solid rgba(255,200,0,0.5);border-radius:14px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
                         <span style="font-size:1.6em;flex-shrink:0;">⚠️</span>
                         <div>
-                            <div style="font-weight:800;color:#ffd700;font-size:0.97em;margin-bottom:4px;">Kartu 👑 Mistik dan 🔥 Legendaris tidak dibagikan di awal!</div>
+                            <div style="font-weight:800;color:#ffd700;font-size:0.97em;margin-bottom:4px;">Kartu <span data-rarity-icon="magis"></span> Magis, <span data-rarity-icon="sakral"></span> Sakral, <span data-rarity-icon="mythic"></span> Mistik, dan <span data-rarity-icon="legendary"></span> Legendaris tidak dibagikan di awal!</div>
                             <div style="font-size:0.86em;color:rgba(255,255,255,0.88);line-height:1.6;text-align:justify;">Kedua kartu ini hanya bisa kamu dapatkan lewat <strong style="color:#ffd700;">Tambah Kartu</strong> saat bermain. Gunakan strategi Level Tambah Kartu untuk meningkatkan peluangmu!</div>
                         </div>
                     </div>
@@ -4281,8 +4445,10 @@
                     <div class="enc-rule-text">
                         Di setiap ronde, hanya <strong>1 pemain</strong> yang boleh jatuhkan kartu di Tahap 1. Kartu itu menentukan <strong>provinsi</strong> yang harus diikuti semua pemain lain.
                         <ul style="margin-top:10px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
-                            <li style="display:flex;gap:8px;align-items:flex-start;">🔵 <span><strong>Ronde pertama:</strong> Komputer yang jatuhkan kartu pertama secara otomatis.</span></li>
-                            <li style="display:flex;gap:8px;align-items:flex-start;">🔴 <span><strong>Ronde berikutnya:</strong> Pemain yang <strong>menjatuhkan kartu dengan kekuatan tertinggi</strong> di ronde sebelumnya yang mendapat giliran jatuhkan kartu di Tahap 1!</span></li>
+                            <li style="display:flex;gap:8px;align-items:flex-start;">🔵 <span><strong>Ronde pertama:</strong> Semua pemain langsung ikut <strong>Voting</strong> buat menentukan siapa yang dapat giliran duluan!</span></li>
+                            <li style="display:flex;gap:8px;align-items:flex-start;">🔴 <span><strong>Ronde berikutnya:</strong> Pemain yang <strong>menjatuhkan kartu dengan kekuatan tertinggi</strong> di ronde sebelumnya yang dapat giliran jatuhkan kartu di Tahap 1!</span></li>
+                            <li style="display:flex;gap:8px;align-items:flex-start;">🟣 <span><strong>Kapan Voting Terjadi?</strong> Selain terjadi di ronde satu voting juga terjadi apabila pemain yang harusnya dapat giliran jatuhkan kartu di tahap 1 itu ternyata sudah nggak bisa main lagi (misalnya dia sudah menang duluan/menyerah), pemain yang tersisa harus <strong>Voting</strong> dulu buat menentukan siapa yang dapat giliran.</span></li>
+                            <li style="display:flex;gap:8px;align-items:flex-start;">🗳️ <span><strong>Voting itu apa?</strong> Cuma tebak-tebakan singkat! Kalau yang ikut <strong>2 orang</strong> → main <strong>Suit Batu-Gunting-Kertas</strong>. Kalau yang ikut <strong>3 orang atau lebih</strong> → semua pilih <strong>Kartu Putih</strong> atau <strong>Kartu Hitam</strong>, aturan mainya sama seperti <strong>permainan hompimpa</strong> yang dimana pemain yang memilih kartu yang paling berbeda di anatara pilihan kartu pemain lain maka dia akan menang! Waktu memilih cuma <strong>10 detik</strong>, kalau hasilnya seri, tebak-tebakannya diulang lagi.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -4320,70 +4486,93 @@
                     <span class="enc-rule-icon">🎰</span>
                     <div class="enc-rule-heading">Sistem Level Tambah Kartu — Makin Sering Tambah Kartu, Makin Bagus Kartunya!</div>
                     <div class="enc-rule-text">
-                        Setiap pemain punya <strong>Level Tambah Kartu</strong> (Level 1–10) yang naik otomatis setiap <strong>1 kali Tambah Kartu</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 10 adalah level tertinggi, dengan 👑 Mistik dominan!
+                        Setiap pemain punya <strong>Level Tambah Kartu</strong> (Level 1–12) yang naik otomatis setiap <strong>1 kali Tambah Kartu</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 12 adalah level tertinggi, dengan <span data-rarity-icon="magis"></span> Magis dan <span data-rarity-icon="sakral"></span> Sakral dominan!
                         <ul style="margin-top:10px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
                             <li style="display:flex;gap:8px;align-items:flex-start;">🔄 <span><strong>Reset Level Tambah Kartu:</strong> Level Tambah Kartu-mu akan <strong>kembali ke Level 1</strong> jika salah satu dari kondisi ini terpenuhi:
                                 <ul style="margin-top:6px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:4px;">
-                                    <li style="display:flex;gap:8px;align-items:flex-start;">1️⃣ <span>Kartu yang kamu dapat adalah kartu dengan <strong>tingkatan tertinggi yang masih tersisa</strong> di Kartu Tersisa saat itu. Contoh: jika kartu tertinggi yang masih ada di Kartu Tersisa adalah 👾 Epik, lalu kamu dapat kartu Epik, maka Level Tambah Kartu reset ke Level 1.</span></li>
-                                    <li style="display:flex;gap:8px;align-items:flex-start;">2️⃣ <span>Kamu sudah berada di <strong>Level 10</strong> lalu melakukan Tambah Kartu, maka Level Tambah Kartu langsung reset ke Level 1.</span></li>
+                                    <li style="display:flex;gap:8px;align-items:flex-start;">1️⃣ <span>Kartu yang kamu dapat adalah kartu dengan <strong>tingkatan tertinggi yang masih tersisa</strong> di Kartu Tersisa saat itu. Contoh: jika kartu tertinggi yang masih ada di Kartu Tersisa adalah <span data-rarity-icon="epic"></span> Epik, lalu kamu dapat kartu Epik, maka Level Tambah Kartu reset ke Level 1.</span></li>
+                                    <li style="display:flex;gap:8px;align-items:flex-start;">2️⃣ <span>Kamu sudah berada di <strong>Level 12</strong> lalu melakukan Tambah Kartu, maka Level Tambah Kartu langsung reset ke Level 1.</span></li>
                                 </ul>
                             </span></li>
                             <li style="display:flex;gap:8px;align-items:flex-start;">🎲 <span><strong>Peluang dapat kartu satu provinsi:</strong> Sistem Tambah Kartu <strong>tidak sepenuhnya acak</strong>. Setiap kali kamu tambah kartu tapi belum dapat kartu provinsi yang diminta, peluang tambah kartu berikutnya mendapat kartu yang cocok terus meningkat. Jadi semakin sering tambah kartu tanpa hasil, semakin besar kemungkinan tambah kartu berikutnya berhasil!</span></li>
                         </ul>
-                        <strong style="display:block;margin-top:10px;">🎴 Prioritas Kartu per Level (Level 1–Level 5):</strong>
+                        <strong style="display:block;margin-top:10px;">🎴 Prioritas Kartu per Level (Level 1–Level 4):</strong>
                     </div>
                     <div style="overflow-x:auto; margin-top:8px;">
                         <table style="width:100%; border-collapse:collapse; font-size:0.78em; text-align:center;">
                             <thead>
                                 <tr style="background:rgba(255,255,255,0.12);">
                                     <th style="padding:5px 4px; text-align:left; border-radius:6px 0 0 0;">Kartu</th>
-                                    <th style="padding:5px 3px;">⭐ Level 1</th>
-                                    <th style="padding:5px 3px;">⭐ Level 2</th>
-                                    <th style="padding:5px 3px;">⭐ Level 3</th>
-                                    <th style="padding:5px 3px;">⭐ Level 4</th>
-                                    <th style="padding:5px 3px; border-radius:0 6px 0 0;">⭐ Level 5</th>
+                                    <th style="padding:5px 3px;">⭐ Level 1</th><th style="padding:5px 3px;">⭐ Level 2</th><th style="padding:5px 3px;">⭐ Level 3</th><th style="padding:5px 3px; border-radius:0 6px 0 0;">⭐ Level 4</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td style="text-align:left;padding:4px;">👑 Mistik</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">🔥 Legendaris</td><td>4%</td><td>2%</td><td>2%</td><td>2%</td><td>1%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">👾 Epik</td><td>6%</td><td>4%</td><td>4%</td><td>5%</td><td>8%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">💎 Spesial</td><td>8%</td><td>7%</td><td>8%</td><td>9%</td><td>11%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">💙 Elite</td><td>9%</td><td>10%</td><td>11%</td><td>12%</td><td>13%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">💠 Langka</td><td>10%</td><td>11%</td><td>12%</td><td>13%</td><td style="color:#ffd700;font-weight:bold;">18%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">💚 Umum</td><td>11%</td><td>13%</td><td>14%</td><td style="color:#ffd700;font-weight:bold;">19%</td><td>14%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">🍀 Unik</td><td>13%</td><td>15%</td><td style="color:#ffd700;font-weight:bold;">20%</td><td>15%</td><td>13%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">🟢 Biasa</td><td>16%</td><td style="color:#ffd700;font-weight:bold;">21%</td><td>15%</td><td>13%</td><td>11%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">⚪ Dasar</td><td style="color:#ffd700;font-weight:bold;">22%</td><td>16%</td><td>13%</td><td>11%</td><td>10%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Magis</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Sakral</td><td>2%</td><td>2%</td><td>2%</td><td>2%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Mistik</td><td>3%</td><td>3%</td><td>3%</td><td>3%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="legendary"></span> Legendaris</td><td>4%</td><td>4%</td><td>4%</td><td>4%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="epic"></span> Epik</td><td>5%</td><td>5%</td><td>5%</td><td>5%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Spesial</td><td>6%</td><td>6%</td><td>6%</td><td>6%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Elite</td><td>7%</td><td>7%</td><td>7%</td><td>8%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rare"></span> Langka</td><td>8%</td><td>8%</td><td>9%</td><td>10%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommon"></span> Unik</td><td>9%</td><td>10%</td><td>11%</td><td style="color:#ffd700;font-weight:bold;">19%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommonplus"></span> Umum</td><td>11%</td><td>13%</td><td style="color:#ffd700;font-weight:bold;">20%</td><td>16%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="commonplus"></span> Biasa</td><td>16%</td><td style="color:#ffd700;font-weight:bold;">22%</td><td>17%</td><td>14%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="common"></span> Dasar</td><td style="color:#ffd700;font-weight:bold;">28%</td><td>19%</td><td>15%</td><td>12%</td></tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="enc-rule-text" style="margin-top:10px;">
-                        <strong>🎴 Prioritas Kartu per Level (Level 6–Level 10):</strong>
+                        <strong>🎴 Prioritas Kartu per Level (Level 5–Level 8):</strong>
                     </div>
                     <div style="overflow-x:auto; margin-top:8px;">
                         <table style="width:100%; border-collapse:collapse; font-size:0.78em; text-align:center;">
                             <thead>
                                 <tr style="background:rgba(255,255,255,0.12);">
                                     <th style="padding:5px 4px; text-align:left; border-radius:6px 0 0 0;">Kartu</th>
-                                    <th style="padding:5px 3px;">⭐ Level 6</th>
-                                    <th style="padding:5px 3px;">⭐ Level 7</th>
-                                    <th style="padding:5px 3px;">⭐ Level 8</th>
-                                    <th style="padding:5px 3px;">⭐ Level 9</th>
-                                    <th style="padding:5px 3px; border-radius:0 6px 0 0;">⭐ Level 10</th>
+                                    <th style="padding:5px 3px;">⭐ Level 5</th><th style="padding:5px 3px;">⭐ Level 6</th><th style="padding:5px 3px;">⭐ Level 7</th><th style="padding:5px 3px; border-radius:0 6px 0 0;">⭐ Level 8</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td style="text-align:left;padding:4px;">👑 Mistik</td><td>1%</td><td>2%</td><td>2%</td><td>7%</td><td style="color:#ffd700;font-weight:bold;">20%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">🔥 Legendaris</td><td>4%</td><td>5%</td><td>11%</td><td style="color:#ffd700;font-weight:bold;">17%</td><td>17%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">👾 Epik</td><td>9%</td><td>12%</td><td style="color:#ffd700;font-weight:bold;">15%</td><td>13%</td><td>14%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">💎 Spesial</td><td>12%</td><td style="color:#ffd700;font-weight:bold;">16%</td><td>14%</td><td>12%</td><td>11%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">💙 Elite</td><td style="color:#ffd700;font-weight:bold;">17%</td><td>14%</td><td>13%</td><td>11%</td><td>10%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">💠 Langka</td><td>14%</td><td>13%</td><td>11%</td><td>10%</td><td>9%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">💚 Umum</td><td>13%</td><td>11%</td><td>10%</td><td>9%</td><td>7%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">🍀 Unik</td><td>11%</td><td>10%</td><td>9%</td><td>8%</td><td>6%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;">🟢 Biasa</td><td>10%</td><td>9%</td><td>8%</td><td>7%</td><td>4%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;">⚪ Dasar</td><td>9%</td><td>8%</td><td>7%</td><td>6%</td><td>2%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Magis</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Sakral</td><td>2%</td><td>2%</td><td>2%</td><td>2%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Mistik</td><td>3%</td><td>3%</td><td>3%</td><td>3%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="legendary"></span> Legendaris</td><td>4%</td><td>4%</td><td>5%</td><td>10%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="epic"></span> Epik</td><td>5%</td><td>6%</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">18%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Spesial</td><td>6%</td><td>9%</td><td style="color:#ffd700;font-weight:bold;">17%</td><td>15%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Elite</td><td>9%</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rare"></span> Langka</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td><td>11%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommon"></span> Unik</td><td>16%</td><td>13%</td><td>12%</td><td>9%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommonplus"></span> Umum</td><td>14%</td><td>12%</td><td>9%</td><td>7%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="commonplus"></span> Biasa</td><td>12%</td><td>10%</td><td>7%</td><td>6%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="common"></span> Dasar</td><td>10%</td><td>7%</td><td>6%</td><td>5%</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="enc-rule-text" style="margin-top:10px;">
+                        <strong>🎴 Prioritas Kartu per Level (Level 9–Level 12):</strong>
+                    </div>
+                    <div style="overflow-x:auto; margin-top:8px;">
+                        <table style="width:100%; border-collapse:collapse; font-size:0.78em; text-align:center;">
+                            <thead>
+                                <tr style="background:rgba(255,255,255,0.12);">
+                                    <th style="padding:5px 4px; text-align:left; border-radius:6px 0 0 0;">Kartu</th>
+                                    <th style="padding:5px 3px;">⭐ Level 9</th><th style="padding:5px 3px;">⭐ Level 10</th><th style="padding:5px 3px;">⭐ Level 11</th><th style="padding:5px 3px; border-radius:0 6px 0 0;">⭐ Level 12</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Magis</td><td>1%</td><td>5%</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">19%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Sakral</td><td>5%</td><td>11%</td><td style="color:#ffd700;font-weight:bold;">19%</td><td>16%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Mistik</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="legendary"></span> Legendaris</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td><td>11%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="epic"></span> Epik</td><td>15%</td><td>13%</td><td>11%</td><td>10%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Spesial</td><td>13%</td><td>10%</td><td>8%</td><td>8%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Elite</td><td>11%</td><td>8%</td><td>7%</td><td>7%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rare"></span> Langka</td><td>8%</td><td>7%</td><td>6%</td><td>6%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommon"></span> Unik</td><td>7%</td><td>6%</td><td>5%</td><td>4%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommonplus"></span> Umum</td><td>6%</td><td>4%</td><td>3%</td><td>3%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="commonplus"></span> Biasa</td><td>4%</td><td>2%</td><td>2%</td><td>2%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="common"></span> Dasar</td><td>2%</td><td>1%</td><td>1%</td><td>1%</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -5737,6 +5926,19 @@
         </div>
     </div>
 
+    <!-- POPUP VOTING HAK TAHAP 1 -->
+    <div class="voting-popup-overlay" id="voting-popup-overlay">
+        <div class="voting-popup-content">
+            <div class="voting-popup-title" id="voting-popup-title">🗳️ Voting Hak Jatuh Kartu Tahap 1</div>
+            <div class="voting-popup-subtitle" id="voting-popup-subtitle">Tidak ada yang otomatis berhak — ayo tentukan lewat voting!</div>
+            <div class="voting-popup-timer" id="voting-popup-timer"><span id="voting-popup-timer-num">7</span></div>
+            <div class="voting-popup-slots" id="voting-popup-slots"></div>
+            <div class="voting-popup-choices" id="voting-popup-choices"></div>
+            <div class="voting-popup-status" id="voting-popup-status"></div>
+            <div class="voting-popup-result" id="voting-popup-result"></div>
+        </div>
+    </div>
+
     <!-- SURRENDER CHOICE MODAL -->
     <div class="modal" id="surrender-choice-modal" style="z-index:99995;">
         <div class="modal-content" style="max-width:420px; text-align:center;">
@@ -5888,6 +6090,35 @@
         // =============================================
         const ASSET_V = '1.0';
         const av = (path) => `${path}?v=${ASSET_V}`;
+
+        // =============================================
+        // RARITY LOGO (gambar/rarity/*.png dengan fallback emoji otomatis)
+        // =============================================
+        // Emoji fallback dipakai selama aset gambar rarity belum ada / gagal dimuat
+        const RARITY_EMOJI = { magis:'👹', sakral:'❤️‍🔥', mythic:'✨', legendary:'🔥', epic:'👾', rareplus:'💎', rarestar:'💙', rare:'💠', uncommon:'💚', uncommonplus:'🍀', commonplus:'🟢', common:'⚪' };
+        // Nama file aset (gambar/rarity/{slug}.png) — sesuaikan jika nama file aset berbeda
+        const RARITY_SLUG = { magis:'magis', sakral:'sakral', mythic:'mistik', legendary:'legendaris', epic:'epik', rareplus:'spesial', rarestar:'elite', rare:'langka', uncommon:'unik', uncommonplus:'umum', commonplus:'biasa', common:'dasar' };
+        // Menghasilkan HTML logo rarity: pakai gambar jika ada, otomatis fallback ke emoji jika gambar belum di-upload/gagal dimuat
+        function rarityLogoHTML(rarity, extraClass) {
+            const emoji = RARITY_EMOJI[rarity] || '';
+            const slug  = RARITY_SLUG[rarity] || rarity;
+            if (!slug) return emoji;
+            const cls = `rarity-logo-img${extraClass ? ' ' + extraClass : ''}`;
+            const imgSrc = av(`gambar/rarity/${slug}.png`);
+            return `<img src="${imgSrc}" class="${cls}" alt="${rarity}" onerror="this.outerHTML='${emoji}';">`;
+        }
+
+        // Mengisi semua placeholder <span data-rarity-icon="..."></span> yang tersebar di HTML statis
+        // (Ensiklopedia: legenda jenis kartu, contoh 8 kartu awal, tabel peluang) dengan logo rarity
+        // (gambar jika ada / fallback emoji otomatis). Placeholder ini dipakai supaya konten statis
+        // ikut sinkron dengan sistem gambar/emoji rarity yang sama dengan kartu di halaman lain.
+        function fillRarityIconPlaceholders() {
+            document.querySelectorAll('[data-rarity-icon]').forEach(el => {
+                const key = el.getAttribute('data-rarity-icon');
+                el.innerHTML = rarityLogoHTML(key, 'rarity-logo-inline');
+            });
+        }
+        fillRarityIconPlaceholders();
 
         // =============================================
         // FIREBASE INITIALIZATION
@@ -8327,11 +8558,13 @@
                 { name: "Pertanian Kopi",             type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumoh Aceh",                 type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Rencong",                    type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Ulee Balang",                type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Ulee Balang",                type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Serune Kalee",               type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Saman",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Peusijuek",                  type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Peusijuek",                  type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Mie Aceh",                   type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kerawang Gayo",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Aceh",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sumatera Utara", cards: [
                 { name: "Karet & Kelapa Sawit",       type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8339,11 +8572,13 @@
                 { name: "Perkebunan Sawit",           type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Bolon",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Piso Gaja Dompak",           type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Ulos",                       type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Ulos",                       type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Gondang Sabangunan",         type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Tor-Tor",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Mangulosi",                  type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Mangulosi",                  type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Bika Ambon",                 type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kain Ulos",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Batak Toba",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sumatera Barat", cards: [
                 { name: "Gambir & Kulit Manis",       type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8351,11 +8586,13 @@
                 { name: "Perdagangan Rempah",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Gadang",               type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Karih",                      type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Bundo Kanduang",             type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Bundo Kanduang",             type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Saluang",                    type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Piring",                type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Batagak Penghulu",           type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Batagak Penghulu",           type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Rendang",                    type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Rendang Padang",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Minangkabau",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Riau", cards: [
                 { name: "Minyak Bumi",                type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8363,11 +8600,13 @@
                 { name: "Pertambangan Minyak",        type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Selaso Jatuh Kembar",  type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pedang Jenawi",              type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Teluk Belanga",              type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Teluk Belanga",              type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Gambus",                     type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Zapin",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Tepuk Tepung Tawar",         type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Tepuk Tepung Tawar",         type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Gulai Belacan",              type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Bolu Kemojo",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Riau",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Kepulauan Riau", cards: [
                 { name: "Bauksit & Timah",            type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8375,11 +8614,13 @@
                 { name: "Perikanan Laut",             type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Belah Bubung",         type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Badik Tumbuk Lada",          type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Kebaya Labuh",               type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Kebaya Labuh",               type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Gong",                       type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Tandak",                type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Mandi Safar",                type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Mandi Safar",                type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Otak-otak",                  type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kerupuk Atom",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Kepulauan Riau",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Jambi", cards: [
                 { name: "Batubara & Karet",           type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8387,11 +8628,13 @@
                 { name: "Perkebunan Karet",           type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Kajang Leko",          type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris Siginjai",             type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Baju Kurung Tanggung",       type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Baju Kurung Tanggung",       type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Kelintang",                  type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Sekapur Sirih",         type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Betangas",                   type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Betangas",                   type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Tempoyak",                   type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Batik Jambi",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Jambi",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Bengkulu", cards: [
                 { name: "Batubara & Emas",            type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8399,11 +8642,13 @@
                 { name: "Pertambangan Batu Bara",     type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Bubungan Lima",        type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Rudus",                      type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pakaian Rejang Lebong",      type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pakaian Rejang Lebong",      type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Dol",                        type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Andun",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Bimbang Adat",               type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Bimbang Adat",               type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Pendap",                     type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Sirup Kalamansi",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Rejang",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sumatera Selatan", cards: [
                 { name: "Minyak & Gas Bumi",          type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8411,11 +8656,13 @@
                 { name: "Pertambangan Minyak",        type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Limas",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Tombak Trisula",             type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Aesan Gede",                 type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Aesan Gede",                 type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Accordion Palembang",        type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Tanggai",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Nganggung",                  type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Nganggung",                  type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Pempek",                     type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Pempek Palembang",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Palembang",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Bangka Belitung", cards: [
                 { name: "Timah",                      type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8423,11 +8670,13 @@
                 { name: "Pertambangan Timah",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Rakit",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Siwar",                      type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pakaian Seting",             type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pakaian Seting",             type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Dambus",                     type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Sepen",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Buang Jong",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Buang Jong",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Lempah Kuning",              type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Terasi Bangka",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Bangka",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Lampung", cards: [
                 { name: "Kopi Robusta Lampung",       type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8435,11 +8684,13 @@
                 { name: "Perkebunan Kopi",            type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Nuwou Sesat",          type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Terapang",                   type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pakaian Tulang Bawang",      type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pakaian Tulang Bawang",      type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Gamolan Pekhing",            type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Sigeh Penguten",        type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Cangget",                    type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Cangget",                    type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Seruit",                     type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Keripik Pisang Lampung",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Lampung",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "DKI Jakarta", cards: [
                 { name: "Sumber Daya Laut (Perikanan)",      type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8447,11 +8698,13 @@
                 { name: "Perdagangan & Jasa",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Kebaya",               type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Golok",                      type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Kebaya Encim",               type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Kebaya Encim",               type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tehyan",                     type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Yapong",                type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Palang Pintu",               type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Palang Pintu",               type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Kerak Telor",                type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Bir Pletok Betawi",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Betawi",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Jawa Barat", cards: [
                 { name: "Teh & Kina",                 type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8459,11 +8712,13 @@
                 { name: "Perkebunan Teh",             type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Kasepuhan",            type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Kujang",                     type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Kebaya Sunda",               type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Kebaya Sunda",               type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Angklung",                   type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Jaipong",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Seren Taun",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Seren Taun",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Karedok",                    type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kain Batik Mega Mendung",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Sunda",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Banten", cards: [
                 { name: "Baja & Industri",            type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8471,11 +8726,13 @@
                 { name: "Industri Baja",              type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Baduy",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Golok Ciomas",               type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pakaian Pangsi",             type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pakaian Pangsi",             type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Dogdog Lojor",               type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Cokek",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Seba Baduy",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Seba Baduy",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Sate Bandeng",               type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Batik Banten",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Sunda Banten",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Jawa Tengah", cards: [
                 { name: "Lahan Pertanian (Padi)",            type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8483,11 +8740,13 @@
                 { name: "Industri Tekstil",           type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Joglo",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris",                      type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Kebaya Jawa",                type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Kebaya Jawa",                type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Gamelan",                    type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Serimpi",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Sekaten",                    type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Sekaten",                    type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Lumpia",                     type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Ukiran Kayu Jepara",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Jawa",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "DI Yogyakarta", cards: [
                 { name: "Material Vulkanik (Pasir dan Batuan)", type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8495,11 +8754,13 @@
                 { name: "Industri Kerajinan",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Bangsal Kencono",            type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris Yogyakarta",           type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Kebaya Kesatrian",           type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Kebaya Kesatrian",           type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Gamelan Yogyakarta",         type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Kumbang",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Labuhan Merapi",             type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Labuhan Merapi",             type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Gudeg",                      type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Gudeg Jogja",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Jawa Yogyakarta",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Jawa Timur", cards: [
                 { name: "Garam & Tembakau",           type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8507,11 +8768,13 @@
                 { name: "Industri Garam",             type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Situbondo",            type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Clurit",                     type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pesa'an",                    type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pesa'an",                    type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Saronen",                    type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Remo",                  type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Karapan Sapi",               type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Karapan Sapi",               type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Rujak Cingur",               type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kerajinan Kulit Tanggulangin",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Jawa Arekan",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Bali", cards: [
                 { name: "Kopi Kintamani",             type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8519,11 +8782,13 @@
                 { name: "Pariwisata Budaya",          type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Gapura Candi Bentar",  type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris Bali",                 type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Payas Agung",                type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Payas Agung",                type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Gamelan Bali",               type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Pendet",                type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Ngaben",                     type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Ngaben",                     type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Ayam Betutu",                type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kain Tenun Endek",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Bali",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Nusa Tenggara Barat", cards: [
                 { name: "Mutiara Lombok",             type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8531,11 +8796,13 @@
                 { name: "Budidaya Mutiara",           type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Dalam Loka",           type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris NTB",                  type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Lambung",                    type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Lambung",                    type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Serunai NTB",                type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Gandrung",              type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Bau Nyale",                  type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Bau Nyale",                  type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Ayam Taliwang",              type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Susu Kuda Liar Sumbawa",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Sasak",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Nusa Tenggara Timur", cards: [
                 { name: "Kopi Flores & Cendana",      type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8543,11 +8810,13 @@
                 { name: "Peternakan Sapi",            type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Musalaki",             type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Sundu",                      type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pakaian Amarasi",            type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pakaian Amarasi",            type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Sasando",                    type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Caci",                  type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Pati Ka",                    type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Pati Ka",                    type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Se'i",                       type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kain Tenun Ikat NTT",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Manggarai",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Kalimantan Barat", cards: [
                 { name: "Bauksit & Emas",             type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8555,11 +8824,13 @@
                 { name: "Pertambangan Bauksit",       type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Panjang",              type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Mandau",                     type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "King Baba",                  type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "King Baba",                  type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Sape",                       type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Monong",                type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Naik Dango",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Naik Dango",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Bubur Pedas",                type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Lidah Buaya Pontianak",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Dayak Kanayatn",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Kalimantan Tengah", cards: [
                 { name: "Rotan & Kayu Ulin",          type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8567,11 +8838,13 @@
                 { name: "Kehutanan & Rotan",          type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Betang",               type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Mandau Kalteng",             type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Sangkarut",                  type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Sangkarut",                  type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Garantung",                  type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Giring-giring",         type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Tiwah",                      type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Tiwah",                      type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Juhu Singkah",               type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kerajinan Rotan Dayak",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Dayak Ngaju",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Kalimantan Selatan", cards: [
                 { name: "Intan & Batubara",           type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8579,11 +8852,13 @@
                 { name: "Pertambangan Intan",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Bubungan Tinggi",      type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris Banjar",               type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Babaju Kun Galung",          type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Babaju Kun Galung",          type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Panting",                    type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Baksa Kembang",         type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Aruh Ganal",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Aruh Ganal",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Soto Banjar",                type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kain Sasirangan",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Banjar",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Kalimantan Timur", cards: [
                 { name: "Minyak & Gas Kaltim",        type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8591,11 +8866,13 @@
                 { name: "Pertambangan Migas",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Lamin",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Mandau Kaltim",              type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Kustin",                     type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Kustin",                     type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Sape Kaltim",                type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Gong",                  type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Erau",                       type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Erau",                       type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Ayam Cincane",               type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Amplang Ikan Pipih",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Kutai",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Kalimantan Utara", cards: [
                 { name: "Gas Alam & Kelapa Sawit",    type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8603,11 +8880,13 @@
                 { name: "Perikanan & Kehutanan",      type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Baloy",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Mandau Kalut",               type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Ta'a",                       type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Ta'a",                       type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Sampe",                      type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Jepen",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Iraw Tengkayu",              type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Iraw Tengkayu",              type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Kepiting Soka",              type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kepiting Tarakan",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Tidung",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sulawesi Utara", cards: [
                 { name: "Kelapa & Cengkeh",           type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8615,11 +8894,13 @@
                 { name: "Perikanan Laut",             type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Walewangko",           type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris Sulut",                type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Laku Tepu",                  type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Laku Tepu",                  type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Kolintang",                  type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Maengket",              type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Tulude",                     type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Tulude",                     type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Bubur Manado",               type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Pala Siau",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Manado",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Gorontalo", cards: [
                 { name: "Jagung & Ikan Tuna",         type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8627,11 +8908,13 @@
                 { name: "Pertanian Jagung",           type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Dulohupa",             type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Wamilo",                     type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Biliu",                      type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Biliu",                      type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Polopalo",                   type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Polopalo",              type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Molonthalo",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Molonthalo",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Binte Biluhuta",             type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kain Karawang Upahiya",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Gorontalo",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sulawesi Tengah", cards: [
                 { name: "Nikel & Emas Sulteng",       type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8639,11 +8922,13 @@
                 { name: "Pertambangan Nikel",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Tambi",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pasatimpo",                  type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Koje",                       type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Koje",                       type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Ganda",                      type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Lumense",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Balia",                      type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Balia",                      type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Kaledo",                     type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Bawang Goreng Palu",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Kaili",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sulawesi Barat", cards: [
                 { name: "Kakao & Kelapa Sulbar",      type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8651,11 +8936,13 @@
                 { name: "Perkebunan Kakao",           type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Boyang",               type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Badik Sulbar",               type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pattuqduq Towaine",          type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pattuqduq Towaine",          type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Kecapi Sulbar",              type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Patuddu",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Sayyang Pattu'du",           type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Sayyang Pattu'du",           type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Bau Peapi",                  type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Sutra Mandar",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Mandar",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sulawesi Selatan", cards: [
                 { name: "Nikel & Besi Sulsel",        type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8663,11 +8950,13 @@
                 { name: "Pertambangan Nikel",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Tongkonan",            type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Badik",                      type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Baju Bodo",                  type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Baju Bodo",                  type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Kecapi Sulsel",              type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Kipas Pakarena",        type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Rambu Solo",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Rambu Solo",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Coto Makassar",              type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kopi Toraja",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Bugis",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Sulawesi Tenggara", cards: [
                 { name: "Nikel & Aspal Buton",        type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8675,11 +8964,13 @@
                 { name: "Pertambangan Aspal",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Istana Buton",         type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Keris Sultra",               type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Babu Nggawi",                type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Babu Nggawi",                type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Ladolado",                   type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Lulo",                  type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Posuo",                      type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Posuo",                      type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Lapa-lapa",                  type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kacang Mete Kendari",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Tolaki",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Maluku", cards: [
                 { name: "Pala & Cengkeh Maluku",      type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8687,11 +8978,13 @@
                 { name: "Perkebunan Rempah",          type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Baileo",               type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Parang Salawaku",            type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Baju Cele",                  type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Baju Cele",                  type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tifa",                       type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Cakalele",              type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Pukul Sapu",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Pukul Sapu",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Papeda",                     type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Minyak Kayu Putih Buru",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Ambon",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Maluku Utara", cards: [
                 { name: "Nikel & Cengkeh Malut",      type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8699,11 +8992,13 @@
                 { name: "Pertambangan Nikel",         type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Sasadu",               type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Parang Malut",               type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Manteren Lamo",              type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Manteren Lamo",              type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tifa Malut",                 type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Lenso",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Kololi Kie",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Kololi Kie",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Gohu Ikan",                  type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Batu Bacan",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Melayu Ternate",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Papua", cards: [
                 { name: "Emas & Tembaga Freeport",    type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8711,11 +9006,13 @@
                 { name: "Pertambangan Emas",          type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Honai",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pisau Belati Papua",         type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Koteka",                     type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Koteka",                     type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tifa Papua",                 type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Musyoh",                type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Bakar Batu",                 type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Bakar Batu",                 type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Papeda Papua",               type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Noken",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Biak",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Papua Barat", cards: [
                 { name: "Gas Alam & Ikan Laut",       type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8723,11 +9020,13 @@
                 { name: "Perikanan & Migas",          type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Mod Aki Aksa",         type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pisau Pabar",                type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Ewer",                       type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Ewer",                       type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tifa Pabar",                 type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Suanggi",               type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Wor",                        type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Wor",                        type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Ikan Bakar Manokwari",       type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Rumput Kebar",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Hatam",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Papua Selatan", cards: [
                 { name: "Kayu & Hasil Hutan",         type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8735,11 +9034,13 @@
                 { name: "Kehutanan",                  type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Gotad",                type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pisau Pasel",                type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Pummi",                      type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Pummi",                      type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tifa Pasel",                 type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Gatzi",                 type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Yi Ha",                      type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Yi Ha",                      type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Sagu Sep",                   type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Abon Daging Rusa Merauke",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Asmat",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Papua Tengah", cards: [
                 { name: "Emas & Hasil Hutan Pateng",  type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8747,11 +9048,13 @@
                 { name: "Pertanian & Kehutanan",      type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Karapao",              type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pisau Pateng",               type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Sali",                       type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Sali",                       type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tifa Pateng",                type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Yuw",                   type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Bakar Batu Pateng",          type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Bakar Batu Pateng",          type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Sagu Bakar",                 type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Kopi Moanemani",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Mee",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Papua Pegunungan", cards: [
                 { name: "Hasil Hutan & Kopi",         type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8759,11 +9062,13 @@
                 { name: "Pertanian Pegunungan",       type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Honai Pegunungan",     type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pisau Peg",                  type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Yokal",                      type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Yokal",                      type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Pikon",                      type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Selamat Datang",        type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Festival Lembah Baliem",     type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Festival Lembah Baliem",     type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Udang Selingkuh",            type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Madu Wamena",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Dani",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]},
             { name: "Papua Barat Daya", cards: [
                 { name: "Ikan & Mutiara Sorong",      type: "Sumber Daya Alam",        rarity: "mythic",      power: 10 },
@@ -8771,11 +9076,13 @@
                 { name: "Perikanan & Pariwisata",     type: "Sektor Ekonomi",      rarity: "rareplus",    power: 7 },
                 { name: "Rumah Kambik",               type: "Rumah Adat",          rarity: "epic",        power: 8 },
                 { name: "Pisau Pabarday",             type: "Senjata Tradisional", rarity: "rarestar",    power: 6 },
-                { name: "Boe",                        type: "Pakaian Adat",        rarity: "rare",        power: 5 },
+                { name: "Boe",                        type: "Pakaian Adat",        rarity: "magis",        power: 12 },
                 { name: "Tifa Pabarday",              type: "Alat Musik",          rarity: "uncommon",    power: 4 },
                 { name: "Tari Aluyen",                type: "Tarian",              rarity: "uncommonplus",power: 3 },
-                { name: "Injak Piring",               type: "Adat Istiadat",       rarity: "commonplus",  power: 2 },
+                { name: "Injak Piring",               type: "Adat Istiadat",       rarity: "sakral",  power: 11 },
                 { name: "Ikan Kuah Kuning",           type: "Makanan Khas",        rarity: "common",      power: 1 },
+                { name: "Anyaman Pandan Moi",                type: "Produk Unggulan",     rarity: "commonplus",      power: 2 },
+                { name: "Bahasa Moi",                 type: "Bahasa Daerah",       rarity: "rare",       power: 5 },
             ]}
         ];
 
@@ -10137,6 +10444,22 @@
                     enqueueSticker(data);
                     break;
 
+                case 'VOTING_START':
+                    handleVotingStart(data);
+                    break;
+
+                case 'VOTING_PROGRESS':
+                    handleVotingProgress(data);
+                    break;
+
+                case 'VOTING_REVEAL':
+                    handleVotingReveal(data);
+                    break;
+
+                case 'VOTING_END':
+                    handleVotingEnd();
+                    break;
+
                 case 'PARTY_SEARCH_CANCELLED': {
                     // Salah satu anggota party membatalkan dari sisi server (via LEAVE_QUEUE)
                     // Hentikan pencarian dan kembalikan ke lobi party
@@ -10203,6 +10526,20 @@
                         // Tanpa ini spectator harus tunggu 20-45 detik untuk ws.onclose terpicu.
                         window._lastPongAt = Date.now();
                         if (window._spectatorCountdownDetector) clearInterval(window._spectatorCountdownDetector);
+                        // [FIX SPECTATOR COUNTDOWN - REAL PROBE] Sebelumnya _lastPongAt hanya di-set sekali
+                        // di atas dan baru diperbarui lagi oleh SERVER_PONG (balasan CLIENT_PING) atau PING
+                        // generik server (tiap 20 detik, independen dari waktu countdown 5-6 detik ini —
+                        // makanya fix sebelumnya cuma "kebetulan" berhasil sekali). Sekarang kirim CLIENT_PING
+                        // aktif di setiap tick supaya ada round-trip nyata ke server yang memperbarui
+                        // _lastPongAt secara konsisten selama fase countdown, sama seperti startPingMeasurement()
+                        // yang dipakai setelah GAME_STARTED. Server membalas CLIENT_PING tanpa syarat apa pun
+                        // (lihat case 'CLIENT_PING' di server), jadi aman dipakai sebelum GAME_STARTED juga.
+                        const _spectatorCountdownProbe = () => {
+                            if (ws && ws.readyState === WebSocket.OPEN) {
+                                try { ws.send(JSON.stringify({ type: 'CLIENT_PING', ts: Date.now() })); } catch(e) {}
+                            }
+                        };
+                        _spectatorCountdownProbe();
                         window._spectatorCountdownDetector = setInterval(() => {
                             if (!window._pendingSpectatorRoom) {
                                 clearInterval(window._spectatorCountdownDetector);
@@ -10224,6 +10561,10 @@
                                         }, 500);
                                     }
                                 }
+                            } else {
+                                // Koneksi masih sehat — kirim probe berikutnya agar tick 3 detik selanjutnya
+                                // punya _lastPongAt yang benar-benar baru, bukan nilai basi.
+                                _spectatorCountdownProbe();
                             }
                         }, 3000);
                     }
@@ -10557,6 +10898,25 @@
 
                 case 'GAME_STATE_UPDATE':
                     updateGameUI(data.state);
+                    // [VOTING TAHAP 1] Sinkronisasi ulang popup voting saat reconnect di tengah voting
+                    // (kalau kita baru join/reconnect dan melewatkan broadcast VOTING_START asli)
+                    if (data.state && data.state.votingActive && !_votingState.active) {
+                        const _vParticipants = (data.state.votingParticipants || []).map(pid => {
+                            const pp = (data.state.players || []).find(x => x.id === pid);
+                            return { id: pid, name: pp ? pp.name : '???', isBot: pp ? !!pp.isBot : false };
+                        });
+                        handleVotingStart({
+                            mode: data.state.votingMode,
+                            participants: _vParticipants,
+                            duration: 10000,
+                            serverNow: Date.now(), // estimasi — timer akan sedikit meleset tapi tetap aman (server yang final)
+                            roundNum: 1
+                        });
+                        handleVotingProgress({ votedIds: data.state.votingVotedIds || [] });
+                    } else if (data.state && !data.state.votingActive && _votingState.active) {
+                        // Voting sudah selesai di server tapi client masih menampilkan popup lama → tutup
+                        handleVotingEnd();
+                    }
                     // Sync isPaused state to pause button
                     if (data.state && typeof data.state.isPaused !== 'undefined') {
                         window._gamePaused = !!data.state.isPaused;
@@ -10724,6 +11084,15 @@
                     break;
 
                 case 'PING':
+                    // [FIX FALSE-POSITIVE SPECTATOR COUNTDOWN] PING generik dari server (setiap 20 detik)
+                    // adalah bukti sah bahwa koneksi masih hidup, jadi refresh _lastPongAt di sini juga.
+                    // Sebelumnya hanya SERVER_PONG (balasan CLIENT_PING) yang menyentuh _lastPongAt, padahal
+                    // CLIENT_PING baru mulai dikirim setelah GAME_STARTED (lihat startPingMeasurement()).
+                    // Akibatnya selama fase countdown provinces-preview, _spectatorCountdownDetector
+                    // (yang membaca _lastPongAt) selalu menganggap koneksi mati setelah >5 detik meski
+                    // WebSocket-nya sebenarnya sehat. Baris ini murni menambah "refresh timestamp",
+                    // tidak mengubah alur/kondisi lain, sehingga tidak berdampak ke bagian lain manapun.
+                    window._lastPongAt = Date.now();
                     if (ws && ws.readyState === WebSocket.OPEN) {
                         try { ws.send(JSON.stringify({ type: 'PONG' })); } catch(e) {}
                     }
@@ -10909,9 +11278,13 @@
             if (dc2) dc2.textContent = gs.discardPile ? gs.discardPile.length : 0;
 
             // Province info button
+            // [FIX] Khusus POV spectator: tombol ini JANGAN disembunyikan saat currentProvince
+            // sempat kosong di tengah pergantian ronde (mis. saat transisi round baru sebelum
+            // kartu provinsi berikutnya diset). Selalu tampilkan selama match spectator aktif,
+            // konsisten dengan tombol stiker yang juga selalu tampil.
             const infoBtn = document.getElementById('province-info-btn');
             if (infoBtn) {
-                infoBtn.style.display = gs.currentProvince ? 'flex' : 'none';
+                infoBtn.style.display = 'flex';
                 if (!infoBtn._listenerAdded) { infoBtn.addEventListener('click', () => { playSound('button'); showProvinceInfo(); }); infoBtn._listenerAdded = true; }
             }
 
@@ -11026,7 +11399,7 @@
                             const cardEl = createCardElement(card);
                             const negH = baseH - wH; // collapse height
                             const negW = Math.floor((baseW - wW) / 2); // collapse width kiri & kanan
-                            cardEl.style.cssText = `transform:scale(${cardScale}); transform-origin:top center; cursor:default; pointer-events:none; display:block; margin-left:-${negW}px; margin-right:-${negW}px; margin-bottom:-${negH}px;`;
+                            cardEl.style.cssText = `transform:scale(${cardScale}); transform-origin:top center; cursor:default; pointer-events:none; display:flex; margin-left:-${negW}px; margin-right:-${negW}px; margin-bottom:-${negH}px;`;
                             outerWrap.appendChild(cardEl);
 
                             const lbl = document.createElement('div');
@@ -11340,8 +11713,7 @@
             div.dataset.cardId = card.id;
             if (card.province) div.dataset.province = card.province;
 
-            const rarityEmojis = { mythic:'👑', legendary:'🔥', epic:'👾', rareplus:'💎', rarestar:'💙', rare:'💠', uncommon:'💚', uncommonplus:'🍀', commonplus:'🟢', common:'⚪' };
-            const emojiMap = { 'Sumber Daya Alam':'🌍', 'Bangunan Bersejarah':'🏛️', 'Sektor Ekonomi':'💰', 'Rumah Adat':'🏠', 'Senjata Tradisional':'🗡️', 'Pakaian Adat':'👘', 'Alat Musik':'🎵', 'Tarian':'💃', 'Adat Istiadat':'🏮', 'Makanan Khas':'🍜' };
+            const emojiMap = { 'Sumber Daya Alam':'🌍', 'Bangunan Bersejarah':'🏛️', 'Sektor Ekonomi':'💰', 'Rumah Adat':'🏠', 'Senjata Tradisional':'🗡️', 'Pakaian Adat':'👘', 'Alat Musik':'🎵', 'Tarian':'💃', 'Adat Istiadat':'🏮', 'Makanan Khas':'🍜', 'Produk Unggulan':'🏆', 'Bahasa Daerah':'🗣️' };
 
             const fallbackEmoji = emojiMap[card.type] || '🎴';
             let imageContent = '';
@@ -11353,7 +11725,7 @@
             }
 
             div.innerHTML = `
-                <div class="card-rarity">${rarityEmojis[card.rarity] || ''}</div>
+                <div class="card-rarity">${rarityLogoHTML(card.rarity)}</div>
                 <div class="card-image">${imageContent}</div>
                 <div class="card-name">${card.name}</div>
                 <div class="card-type">${card.type}</div>
@@ -11365,8 +11737,6 @@
         // PROVINCE INFO MODAL
         // =============================================
         // ── SPECTATOR PROVINCE INFO HELPERS ──────────────────────────────────────
-        const _RARITY_EMOJI = { mythic:'👑', legendary:'🔥', epic:'👾', rareplus:'💎', rarestar:'💙', rare:'💠', uncommon:'💚', uncommonplus:'🍀', commonplus:'🟢', common:'⚪' };
-
         function _specRenderProvCards(provName) {
             if (!gameState || !provName) return;
             const provData = provinces.find(p => p.name === provName);
@@ -11407,7 +11777,7 @@
 
                 const row = document.createElement('div');
                 row.className = `spec-card-row ${rowClass}`;
-                row.innerHTML = `<span class="spec-card-name">${_RARITY_EMOJI[card.rarity] || ''} ${escHtml(card.name)}</span>` +
+                row.innerHTML = `<span class="spec-card-name">${rarityLogoHTML(card.rarity, 'rarity-logo-inline')} ${escHtml(card.name)}</span>` +
                                 `<span class="spec-card-power">⚡${card.power}</span>` +
                                 `<span class="spec-card-badge ${badge}">${badgeLabel}</span>`;
                 cardList.appendChild(row);
@@ -11494,8 +11864,7 @@
             const player = gameState.players.find(p => p.id === myPlayerId);
             const playerCardIds = player ? player.hand.map(c => c.id) : [];
 
-            const rarityEmojis = { mythic:'👑', legendary:'🔥', epic:'👾', rareplus:'💎', rarestar:'💙', rare:'💠', uncommon:'💚', uncommonplus:'🍀', commonplus:'🟢', common:'⚪' };
-            const emojiMap = { 'Sumber Daya Alam':'🌍', 'Bangunan Bersejarah':'🏛️', 'Sektor Ekonomi':'💰', 'Rumah Adat':'🏠', 'Senjata Tradisional':'🗡️', 'Pakaian Adat':'👘', 'Alat Musik':'🎵', 'Tarian':'💃', 'Adat Istiadat':'🏮', 'Makanan Khas':'🍜' };
+            const emojiMap = { 'Sumber Daya Alam':'🌍', 'Bangunan Bersejarah':'🏛️', 'Sektor Ekonomi':'💰', 'Rumah Adat':'🏠', 'Senjata Tradisional':'🗡️', 'Pakaian Adat':'👘', 'Alat Musik':'🎵', 'Tarian':'💃', 'Adat Istiadat':'🏮', 'Makanan Khas':'🍜', 'Produk Unggulan':'🏆', 'Bahasa Daerah':'🗣️' };
 
             provinceData.cards.forEach(card => {
                 const cardDiv = document.createElement('div');
@@ -11508,7 +11877,7 @@
                 imageContent = `<img src="${imgSrc}" alt="${card.name}" onerror="this.parentElement.innerHTML='${fallbackEmoji}';">`;
 
                 cardDiv.innerHTML = `
-                    <div class="province-info-card-rarity">${rarityEmojis[card.rarity] || ''}</div>
+                    <div class="province-info-card-rarity">${rarityLogoHTML(card.rarity)}</div>
                     ${isOwned ? '<div class="province-info-card-owned">✅ Dimiliki</div>' : ''}
                     <div class="province-info-card-image">${imageContent}</div>
                     <div class="province-info-card-name">${card.name}</div>
@@ -11567,6 +11936,250 @@
                 grid.appendChild(btn);
             });
             _stickerPopupBuilt = true;
+        }
+
+        // ======================= VOTING HAK TAHAP 1 (CLIENT) =======================
+        let _votingState = {
+            active: false, mode: null, participants: [], votedIds: [],
+            myChoice: null, deadline: 0, countdownTimer: null
+        };
+
+        function handleVotingStart(data) {
+            _votingState = {
+                active: true,
+                mode: data.mode,                 // 'card' | 'suit'
+                participants: data.participants,  // [{id,name,isBot}]
+                votedIds: [],
+                myChoice: null,
+                deadline: (data.serverNow || Date.now()) + (data.duration || 10000),
+                countdownTimer: null
+            };
+            playSound('button');
+
+            const overlay = document.getElementById('voting-popup-overlay');
+            const title = document.getElementById('voting-popup-title');
+            const subtitle = document.getElementById('voting-popup-subtitle');
+            const status = document.getElementById('voting-popup-status');
+            const result = document.getElementById('voting-popup-result');
+
+            const roundLabel = data.roundNum > 1 ? ` — Ronde ${data.roundNum}` : '';
+            if (data.mode === 'suit') {
+                title.textContent = `✊✋✌️ Suit: Rebutan Hak Tahap 1${roundLabel}`;
+                subtitle.textContent = 'Seri berdua? Pilih Gunting, Batu, atau Kertas!';
+            } else {
+                title.textContent = `🗳️ Voting Kartu: Rebutan Hak Tahap 1${roundLabel}`;
+                subtitle.textContent = 'Pilih Kartu Putih atau Kartu Hitam — kelompok dengan suara lebih sedikit yang menang!';
+            }
+            status.textContent = '';
+            result.textContent = '';
+
+            _renderVotingSlots();
+            _renderVotingChoices();
+            overlay.classList.add('active');
+
+            if (_votingState.countdownTimer) clearInterval(_votingState.countdownTimer);
+            _votingState.countdownTimer = setInterval(_tickVotingCountdown, 200);
+            _tickVotingCountdown();
+        }
+
+        function _tickVotingCountdown() {
+            if (!_votingState.active) return;
+            const remainMs = Math.max(0, _votingState.deadline - Date.now());
+            const remainSec = Math.ceil(remainMs / 1000);
+            const totalSec = 10;
+            const pct = Math.max(0, Math.min(100, (remainMs / (totalSec * 1000)) * 100));
+            const timerEl = document.getElementById('voting-popup-timer');
+            const numEl = document.getElementById('voting-popup-timer-num');
+            if (timerEl) timerEl.style.setProperty('--voting-pct', pct + '%');
+            if (numEl) numEl.textContent = remainSec;
+            if (timerEl) timerEl.classList.toggle('urgent', remainSec <= 3);
+            if (remainMs <= 0 && _votingState.countdownTimer) {
+                clearInterval(_votingState.countdownTimer);
+                _votingState.countdownTimer = null;
+            }
+        }
+
+        function _renderVotingSlots() {
+            const wrap = document.getElementById('voting-popup-slots');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            _votingState.participants.forEach(p => {
+                const slot = document.createElement('div');
+                slot.className = 'voting-slot';
+                slot.id = `voting-slot-${p.id}`;
+                if (p.id === window.myPlayerId) slot.classList.add('is-me');
+                if (_votingState.votedIds.includes(p.id)) slot.classList.add('voted-hidden');
+                slot.innerHTML = `
+                    <div class="voting-slot-name">${p.isBot ? '🤖 ' : ''}${_escapeHtmlVoting(p.name)}</div>
+                    <div class="voting-slot-icon">${_votingState.votedIds.includes(p.id) ? '❓' : '⏳'}</div>
+                `;
+                wrap.appendChild(slot);
+            });
+        }
+
+        function _escapeHtmlVoting(str) {
+            const d = document.createElement('div');
+            d.textContent = str ?? '';
+            return d.innerHTML;
+        }
+
+        // ─── ASET GAMBAR KARTU VOTING (potret, auto-fallback ke shape) ──────────
+        // Cek sekali apakah gambar/voting/kartu_putih.png & kartu_hitam.png ada.
+        // Kalau berhasil dimuat -> dipasang sebagai background-image (otomatis
+        // menyesuaikan ukuran kartu lewat background-size:cover di CSS).
+        // Kalau gagal (belum diupload) -> elemen tetap pakai shape polos + bingkai
+        // dari class putih-shape/hitam-shape yang sudah dipasang duluan.
+        const _votingCardAssetPaths = { putih: 'gambar/voting/kartu_putih.png', hitam: 'gambar/voting/kartu_hitam.png' };
+        const _votingCardAssetCache = {};
+        function _applyVotingCardAsset(el, val) {
+            const url = _votingCardAssetPaths[val];
+            if (!url) return;
+            if (_votingCardAssetCache[url] === true) {
+                el.style.backgroundImage = `url('${url}')`;
+                el.classList.add('has-image');
+                return;
+            }
+            if (_votingCardAssetCache[url] === false) return; // sudah terbukti tidak ada, biarkan shape fallback
+            const img = new Image();
+            img.onload = () => {
+                _votingCardAssetCache[url] = true;
+                el.style.backgroundImage = `url('${url}')`;
+                el.classList.add('has-image');
+            };
+            img.onerror = () => { _votingCardAssetCache[url] = false; };
+            img.src = url;
+        }
+
+        function _renderVotingChoices() {
+            const wrap = document.getElementById('voting-popup-choices');
+            if (!wrap) return;
+            wrap.innerHTML = '';
+            const amParticipant = _votingState.participants.some(p => p.id === window.myPlayerId);
+            if (!amParticipant) {
+                wrap.innerHTML = '<div class="voting-popup-status">Kamu sedang tidak ikut voting ini — menunggu hasil...</div>';
+                return;
+            }
+            if (_votingState.mode === 'suit') {
+                const options = [ { val: 'batu', label: 'Batu', emoji: '✊' }, { val: 'gunting', label: 'Gunting', emoji: '✌️' }, { val: 'kertas', label: 'Kertas', emoji: '✋' } ];
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'voting-choice-btn';
+                    btn.id = `voting-choice-btn-${opt.val}`;
+                    btn.innerHTML = `<span class="voting-choice-emoji">${opt.emoji}</span><span>${opt.label}</span>`;
+                    btn.onclick = () => sendVoteChoice(opt.val);
+                    wrap.appendChild(btn);
+                });
+                return;
+            }
+            // mode === 'card' -> kartu potret Putih/Hitam dengan bingkai
+            const cardOptions = [
+                { val: 'putih', label: 'Kartu Putih', shapeClass: 'putih-shape' },
+                { val: 'hitam', label: 'Kartu Hitam', shapeClass: 'hitam-shape' }
+            ];
+            cardOptions.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = `voting-choice-btn voting-card-shape ${opt.shapeClass}`;
+                btn.id = `voting-choice-btn-${opt.val}`;
+                btn.innerHTML = `<span class="voting-card-tag">${opt.label}</span>`;
+                btn.onclick = () => sendVoteChoice(opt.val);
+                wrap.appendChild(btn);
+                _applyVotingCardAsset(btn, opt.val);
+            });
+        }
+
+        function sendVoteChoice(choice) {
+            if (!_votingState.active || _votingState.myChoice) return;
+            if (!ws || ws.readyState !== WebSocket.OPEN || !window.currentRoomId) return;
+            _votingState.myChoice = choice;
+            playSound('button');
+            try { ws.send(JSON.stringify({ type: 'VOTE_CHOICE', roomId: window.currentRoomId, choice })); } catch(e) {}
+
+            document.querySelectorAll('.voting-choice-btn').forEach(b => {
+                b.disabled = true;
+                b.classList.toggle('selected', b.id === `voting-choice-btn-${choice}`);
+            });
+            const status = document.getElementById('voting-popup-status');
+            if (status) status.textContent = 'Pilihan terkirim! Menunggu peserta lain...';
+        }
+
+        function handleVotingProgress(data) {
+            if (!_votingState.active) return;
+            _votingState.votedIds = data.votedIds || [];
+            _votingState.participants.forEach(p => {
+                const slot = document.getElementById(`voting-slot-${p.id}`);
+                if (!slot) return;
+                const voted = _votingState.votedIds.includes(p.id);
+                slot.classList.toggle('voted-hidden', voted);
+                const icon = slot.querySelector('.voting-slot-icon');
+                if (icon) icon.textContent = voted ? '❓' : '⏳';
+            });
+            const status = document.getElementById('voting-popup-status');
+            if (status && !_votingState.myChoice) {
+                status.textContent = `${_votingState.votedIds.length}/${_votingState.participants.length} peserta sudah memilih...`;
+            }
+        }
+
+        function handleVotingReveal(data) {
+            if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
+            _votingState.active = false;
+            const choices = data.choices || {};
+            const emojiMap = { putih: '⬜', hitam: '⬛', batu: '✊', gunting: '✌️', kertas: '✋' };
+
+            // Hitung kelompok menang/kalah hanya untuk highlight visual (hasil resmi tetap dari server)
+            let winners = [];
+            if (data.mode === 'card') {
+                const white = _votingState.participants.filter(p => choices[p.id] === 'putih').map(p => p.id);
+                const black = _votingState.participants.filter(p => choices[p.id] === 'hitam').map(p => p.id);
+                const tie = white.length === 0 || black.length === 0 || white.length === black.length;
+                if (!tie) winners = white.length < black.length ? white : black;
+            } else if (data.mode === 'suit' && _votingState.participants.length === 2) {
+                const [a, b] = _votingState.participants;
+                const beats = { batu: 'gunting', gunting: 'kertas', kertas: 'batu' };
+                const ca = choices[a.id], cb = choices[b.id];
+                if (ca !== cb) winners = [ beats[ca] === cb ? a.id : b.id ];
+            }
+
+            _votingState.participants.forEach(p => {
+                const slot = document.getElementById(`voting-slot-${p.id}`);
+                if (!slot) return;
+                slot.classList.remove('voted-hidden');
+                slot.classList.add('revealed');
+                if (winners.length) slot.classList.toggle('win', winners.includes(p.id));
+                if (winners.length) slot.classList.toggle('lose', !winners.includes(p.id));
+                const icon = slot.querySelector('.voting-slot-icon');
+                if (icon) {
+                    if (data.mode === 'card') {
+                        const val = choices[p.id]; // 'putih' | 'hitam'
+                        icon.textContent = '';
+                        icon.classList.add('card-shape', val === 'putih' ? 'putih-shape' : 'hitam-shape');
+                        _applyVotingCardAsset(icon, val);
+                    } else {
+                        icon.textContent = emojiMap[choices[p.id]] || '❔';
+                    }
+                }
+            });
+
+            const status = document.getElementById('voting-popup-status');
+            const result = document.getElementById('voting-popup-result');
+            if (status) status.textContent = '';
+            if (result) {
+                if (!winners.length) {
+                    result.textContent = '⚖️ Seri! Voting akan diulang...';
+                } else if (winners.length === 1) {
+                    const wName = _votingState.participants.find(p => p.id === winners[0])?.name || '?';
+                    result.textContent = `✅ ${wName} menang!`;
+                } else {
+                    const wNames = winners.map(id => _votingState.participants.find(p => p.id === id)?.name).filter(Boolean).join(', ');
+                    result.textContent = `✅ Kelompok suara lebih sedikit menang: ${wNames}`;
+                }
+            }
+        }
+
+        function handleVotingEnd() {
+            _votingState.active = false;
+            if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
+            const overlay = document.getElementById('voting-popup-overlay');
+            setTimeout(() => { if (overlay) overlay.classList.remove('active'); }, 900);
         }
 
         function openStickerPopup() {
@@ -12053,6 +12666,10 @@
             // Tutup surrender-choice & match-result modal jika masih terbuka
             document.getElementById('surrender-choice-modal').classList.remove('active');
             document.getElementById('match-result-modal').classList.remove('active');
+            // [VOTING TAHAP 1] Tutup popup voting jika game berakhir saat voting masih berlangsung
+            document.getElementById('voting-popup-overlay')?.classList.remove('active');
+            if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
+            _votingState.active = false;
 
             // Identifikasi pemain lokal:
             // - Coba dari gameState + myPlayerId (kondisi normal)
@@ -12398,7 +13015,11 @@
                 // Dead connection detector: jika >8 detik tidak ada PONG saat in-game,
                 // tampilkan overlay reconnecting SEGERA dan paksa close WS.
                 // [FIX SPECTATOR] Tambah kondisi _isSpectator agar spectator juga terdeteksi.
-                // Threshold spectator lebih pendek (5 detik) agar overlay muncul lebih cepat.
+                // [FIX FALSE-POSITIVE TRANSISI] Threshold spectator disamakan dengan pemain (8 detik).
+                // Sebelumnya 5 detik — terlalu ketat saat transisi countdown → halaman pertandingan,
+                // di mana updateGameUI() merender seluruh tangan semua pemain (mini-card + gambar) sekaligus
+                // dan sempat memblokir main thread sejenak, membuat overlay "Menyambung Kembali" muncul
+                // sekilas padahal koneksi sebenarnya baik-baik saja.
                 // [BUG FIX FALSE POSITIVE] Jangan paksa close saat:
                 //   1. window._firebaseValidating = true  → validasi Firebase async sedang berjalan
                 //      pasca-reconnect (~6 detik). Selama itu SERVER_PONG tidak masuk ke _lastPongAt
@@ -12408,7 +13029,7 @@
                 if (window._lastPongAt && currentRoomId && (myPlayerId || _isSpectator)
                         && !window._firebaseValidating && !reconnectTimer) {
                     const _silentMs = Date.now() - window._lastPongAt;
-                    const _threshold = (_isSpectator && !myPlayerId) ? 5000 : 8000;
+                    const _threshold = 8000;
                     if (_silentMs > _threshold) {
                         addLog('⚠️ Tidak ada respons server ' + Math.round(_silentMs/1000) + 's — koneksi terputus, menyambung kembali...');
                         if (_isSpectator && !myPlayerId) {
@@ -14613,34 +15234,38 @@
         // DRAW LEVEL INFO POPUP
         // =============================================
         const DL_RATES = {
-            1:  { common:22, commonplus:16, uncommonplus:13, uncommon:11, rare:10, rarestar:9,  rareplus:8,  epic:6,  legendary:4,  mythic:1  },
-            2:  { commonplus:21, common:16, uncommonplus:15, uncommon:13, rare:11, rarestar:10, rareplus:7,  epic:4,  legendary:2,  mythic:1  },
-            3:  { uncommonplus:20, uncommon:14, commonplus:15, common:13, rare:12, rarestar:11, rareplus:8,  epic:4,  legendary:2,  mythic:1  },
-            4:  { uncommon:19, uncommonplus:15, commonplus:13, common:11, rare:13, rarestar:12, rareplus:9,  epic:5,  legendary:2,  mythic:1  },
-            5:  { rare:18, uncommon:14, rarestar:13, uncommonplus:13, rareplus:11, commonplus:11, common:10, epic:8,  legendary:1,  mythic:1  },
-            6:  { rarestar:17, rare:14, uncommon:13, rareplus:12, uncommonplus:11, commonplus:10, epic:9, common:9, legendary:4,  mythic:1  },
-            7:  { rareplus:16, rarestar:14, rare:13, uncommon:11, epic:12, uncommonplus:10, commonplus:9, common:8, legendary:5,  mythic:2  },
-            8:  { epic:15, rareplus:14, rarestar:13, legendary:11, rare:11, uncommon:10, uncommonplus:9, commonplus:8, common:7, mythic:2  },
-            9:  { legendary:17, epic:13, rareplus:12, rarestar:11, rare:10, uncommon:9, uncommonplus:8, commonplus:7, common:6, mythic:7  },
-            10: { mythic:20, legendary:17, epic:14, rareplus:11, rarestar:10, rare:9, uncommon:7, uncommonplus:6, commonplus:4, common:2  }
+            1:  { magis:1, sakral:2, mythic:3, legendary:4, epic:5, rareplus:6, rarestar:7, rare:8, uncommon:9, uncommonplus:11, commonplus:16, common:28 },
+            2:  { magis:1, sakral:2, mythic:3, legendary:4, epic:5, rareplus:6, rarestar:7, rare:8, uncommon:10, uncommonplus:13, commonplus:22, common:19 },
+            3:  { magis:1, sakral:2, mythic:3, legendary:4, epic:5, rareplus:6, rarestar:7, rare:9, uncommon:11, uncommonplus:20, commonplus:17, common:15 },
+            4:  { magis:1, sakral:2, mythic:3, legendary:4, epic:5, rareplus:6, rarestar:8, rare:10, uncommon:19, uncommonplus:16, commonplus:14, common:12 },
+            5:  { magis:1, sakral:2, mythic:3, legendary:4, epic:5, rareplus:6, rarestar:9, rare:18, uncommon:16, uncommonplus:14, commonplus:12, common:10 },
+            6:  { magis:1, sakral:2, mythic:3, legendary:4, epic:6, rareplus:9, rarestar:18, rare:15, uncommon:13, uncommonplus:12, commonplus:10, common:7 },
+            7:  { magis:1, sakral:2, mythic:3, legendary:5, epic:10, rareplus:17, rarestar:15, rare:13, uncommon:12, uncommonplus:9, commonplus:7, common:6 },
+            8:  { magis:1, sakral:2, mythic:3, legendary:10, epic:18, rareplus:15, rarestar:13, rare:11, uncommon:9, uncommonplus:7, commonplus:6, common:5 },
+            9:  { magis:1, sakral:5, mythic:10, legendary:18, epic:15, rareplus:13, rarestar:11, rare:8, uncommon:7, uncommonplus:6, commonplus:4, common:2 },
+            10: { magis:5, sakral:11, mythic:18, legendary:15, epic:13, rareplus:10, rarestar:8, rare:7, uncommon:6, uncommonplus:4, commonplus:2, common:1 },
+            11: { magis:10, sakral:19, mythic:15, legendary:13, epic:11, rareplus:8, rarestar:7, rare:6, uncommon:5, uncommonplus:3, commonplus:2, common:1 },
+            12: { magis:19, sakral:16, mythic:13, legendary:11, epic:10, rareplus:8, rarestar:7, rare:6, uncommon:4, uncommonplus:3, commonplus:2, common:1 }
         };
         const DL_LABELS = [
-            { key:'mythic',      label:'👑 Mistik',      power: 10 },
-            { key:'legendary',   label:'🔥 Legendaris',   power: 9  },
-            { key:'epic',        label:'👾 Epik',         power: 8  },
-            { key:'rareplus',    label:'💎 Spesial',        power: 7  },
-            { key:'rarestar',    label:'💙 Elite',        power: 6  },
-            { key:'rare',        label:'💠 Langka',         power: 5  },
-            { key:'uncommon',    label:'💚 Umum',     power: 4  },
-            { key:'uncommonplus',label:'🍀 Unik',    power: 3  },
-            { key:'commonplus',  label:'🟢 Biasa',      power: 2  },
-            { key:'common',      label:'⚪ Dasar',       power: 1  },
+            { key:'magis',       label:'Magis',       power: 12 },
+            { key:'sakral',      label:'Sakral',      power: 11 },
+            { key:'mythic',      label:'Mistik',      power: 10 },
+            { key:'legendary',   label:'Legendaris',   power: 9  },
+            { key:'epic',        label:'Epik',         power: 8  },
+            { key:'rareplus',    label:'Spesial',        power: 7  },
+            { key:'rarestar',    label:'Elite',        power: 6  },
+            { key:'rare',        label:'Langka',         power: 5  },
+            { key:'uncommon',    label:'Unik',     power: 4  },
+            { key:'uncommonplus',label:'Umum',    power: 3  },
+            { key:'commonplus',  label:'Biasa',      power: 2  },
+            { key:'common',      label:'Dasar',       power: 1  },
         ];
         // DL_THRESHOLDS: index=level, value=drawCount minimum untuk MENCAPAI level tersebut
-        // Server: level = min(drawCount + 1, 10), jadi level N dicapai saat drawCount = N-1
-        // Contoh: level 1 → drawCount 0, level 2 → drawCount 1, ..., level 10 → drawCount 9
-        const DL_THRESHOLDS = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // BENAR: threshold[level] = drawCount minimum level tsb
-        const DL_STARS = { 1:'⭐', 2:'⭐', 3:'⭐', 4:'⭐', 5:'⭐', 6:'⭐', 7:'⭐', 8:'⭐', 9:'⭐', 10:'⭐' };
+        // Server: level = min(drawCount + 1, 12), jadi level N dicapai saat drawCount = N-1
+        // Contoh: level 1 → drawCount 0, level 2 → drawCount 1, ..., level 12 → drawCount 11
+        const DL_THRESHOLDS = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // BENAR: threshold[level] = drawCount minimum level tsb
+        const DL_STARS = { 1:'⭐', 2:'⭐', 3:'⭐', 4:'⭐', 5:'⭐', 6:'⭐', 7:'⭐', 8:'⭐', 9:'⭐', 10:'⭐', 11:'🌟', 12:'✨' };
 
         function showDrawLevelInfo(playerId) {
             if (!gameState) return;
@@ -14670,7 +15295,7 @@
                 if (dlLevelText) dlLevelText.textContent = 'Level ' + level;
 
                 // Progress bar
-                const isMax = level >= 10;
+                const isMax = level >= 12;
                 const lblLeft  = document.getElementById('dl-progress-label-left');
                 const lblRight = document.getElementById('dl-progress-label-right');
                 const fill     = document.getElementById('dl-progress-fill');
@@ -14679,11 +15304,11 @@
                     if (lblRight) lblRight.textContent = '';
                     if (fill) { fill.style.width = '100%'; fill.style.background = 'linear-gradient(90deg,#ffd700,#f093fb)'; }
                 } else {
-                    // Server: level = min(drawCount+1,10), Lv10 tercapai saat drawCount=9
-                    // Tampilkan progress kumulatif: drawCount dari 9 total menuju Lv10
-                    const MAX_DRAW_COUNT = 9;
+                    // Server: level = min(drawCount+1,12), Lv12 tercapai saat drawCount=11
+                    // Tampilkan progress kumulatif: drawCount dari 11 total menuju Lv12
+                    const MAX_DRAW_COUNT = 11;
                     const pct = Math.min(100, Math.round(count / MAX_DRAW_COUNT * 100));
-                    if (lblLeft)  lblLeft.textContent  = `Tambah ke-${count} dari ${MAX_DRAW_COUNT} menuju Level 10`;
+                    if (lblLeft)  lblLeft.textContent  = `Tambah ke-${count} dari ${MAX_DRAW_COUNT} menuju Level 12`;
                     if (lblRight) lblRight.textContent = pct + '%';
                     if (fill) { fill.style.width = pct + '%'; fill.style.background = 'linear-gradient(90deg,#f093fb,#f5576c)'; }
                 }
@@ -14695,17 +15320,34 @@
                     const rates   = DL_RATES[level] || {};
                     const stock   = (gameState && gameState.rarityStock) || {};
                     const resetRarity = (gameState && gameState.highestResetRarity) || null;
-                    const maxRate = Math.max(...DL_LABELS.map(({ key }) => rates[key] || 0));
+                    // [FIX] "Tertinggi" harus dihitung hanya dari rarity yang stoknya masih ada.
+                    // Rarity dengan % tertinggi tapi remaining=0 TIDAK MUNGKIN keluar saat draw
+                    // (server skip rarity kosong di pickByHighestRarity), jadi jangan ditandai top.
+                    const availableLabels = DL_LABELS.filter(({ key }) => (stock[key] && stock[key].remaining > 0));
+                    const drawPileEmpty = availableLabels.length === 0;
+                    // Kalau drawPile benar-benar kosong, server langsung mustForcePick=true & TIDAK
+                    // pernah masuk logika pilih rarity (lihat drawCard(): drawPile.length===0 → return
+                    // sebelum sampai ke pickByHighestRarity). Jadi tidak ada rarity yang "tertinggi"
+                    // sama sekali — jangan fallback ke persen, cukup jangan tandai apapun.
+                    const maxRate = drawPileEmpty ? null : Math.max(...availableLabels.map(({ key }) => rates[key] || 0));
+                    if (drawPileEmpty) {
+                        const notice = document.createElement('div');
+                        notice.style.cssText = 'font-size:0.8em;color:#f87171;text-align:center;padding:4px 0 8px;';
+                        notice.textContent = '⚠️ Kartu tersisa telah habis maka hukuman Tambah Kartu tidak lagi tersedia, Tambah Kartu akan di ganti dengan Ambil Kartu.';
+                        grid.appendChild(notice);
+                    }
                     DL_LABELS.forEach(({ key, label, power }) => {
                         const row = document.createElement('div');
-                        const isTop   = rates[key] === maxRate;
+                        const hasStock = !!(stock[key] && stock[key].remaining > 0);
+                        const isTop   = !drawPileEmpty && rates[key] === maxRate && hasStock;
                         const isReset = (key === resetRarity);
-                        row.className = 'dl-rate-row' + (isTop ? ' dl-rate-top' : '') + (isReset ? ' dl-rate-reset' : '');
+                        row.className = 'dl-rate-row' + (isTop ? ' dl-rate-top' : '') + (isReset ? ' dl-rate-reset' : '') + (!hasStock ? ' dl-rate-empty' : '');
                         const s = stock[key];
                         const stockText = s ? `${s.remaining}/${s.total} kartu` : '—';
                         const badges = (isTop   ? ' <span class="dl-rate-top-badge">✦ Tertinggi</span>'  : '')
-                                     + (isReset ? ' <span class="dl-rate-reset-badge">🔄 Reset Level</span>' : '');
-                        row.innerHTML = `<span class="dl-rate-name">${label}${badges}</span><span class="dl-rate-power">⚡${power}</span><span class="dl-rate-pct">${rates[key]}%</span><span class="dl-rate-stock">📦 ${stockText}</span>`;
+                                     + (isReset ? ' <span class="dl-rate-reset-badge">🔄 Reset Level</span>' : '')
+                                     + (!hasStock ? ' <span class="dl-rate-empty-badge">Habis</span>' : '');
+                        row.innerHTML = `<span class="dl-rate-name">${rarityLogoHTML(key, 'rarity-logo-inline')} ${label}${badges}</span><span class="dl-rate-power">⚡${power}</span><span class="dl-rate-pct">${rates[key]}%</span><span class="dl-rate-stock">📦 ${stockText}</span>`;
                         grid.appendChild(row);
                     });
                 }
@@ -16181,6 +16823,13 @@
             const isSpect = _customRoomRole === 'penonton';
             const canManageBots = _isCustomRoomCreator;
             const myUid = currentUser ? currentUser.uid : null;
+            // Apakah lobi ini punya spectator aktif (host memilih peran 'penonton').
+            // Hanya host yang bisa berperan penonton, jadi flag ini juga berlaku
+            // sama untuk host maupun semua pemain yang melihat lobi ini.
+            const roomHasSpectator = _customHostRole === 'penonton';
+            // Badge pemain (🎮/👤) khusus disembunyikan dari POV host ketika host
+            // sendiri berperan sebagai penonton (isSpect) — sesuai permintaan.
+            const _playerBadgeEmoji = roomHasSpectator ? '🎮' : '👤';
 
             document.getElementById('custom-room-title').textContent = isSpect ? '📺 Lobi Tantang – Penonton' : '🎮 Lobi Tantang – Pemain';
             document.getElementById('custom-room-subtitle').textContent = isSpect
@@ -16269,7 +16918,7 @@
                             <img src="${av('gambar/rank/'+getRankTier(_cachedRankName)+'.png')}" onerror="this.style.display='none'">
                             <span>${escHtml(trRankName(_cachedRankName || 'Bronze III'))}</span>
                         </div>
-                        <span title="Kamu (Pemain)" style="background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.45);border-radius:6px;width:26px;height:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:0.7em;line-height:1;box-sizing:border-box;">🛡️</span>`;
+                        <span title="Kamu (Pemain)" style="background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.45);border-radius:6px;width:26px;height:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:0.7em;line-height:1;box-sizing:border-box;">${_playerBadgeEmoji}</span>`;
                 } else if (entry?.isBot) {
                     // Slot bot — gunakan slotPos asli untuk hapus
                     const levelLabel = entry.level === 1 ? 'Mudah' : entry.level === 2 ? 'Normal' : 'Sulit';
@@ -16286,11 +16935,22 @@
                     const cNameId = `cslot-name-${slotPos}`;
                     const cInit   = escHtml(entry.name.charAt(0).toUpperCase());
                     const entryUid = entry.uid;
+                    // Non-host bisa melihat slot HOST tercampur di daftar ini (server tidak
+                    // menandai slot host secara khusus untuk viewer non-host). Slot ini harus
+                    // tetap memakai badge mahkota 👑, bukan badge pemain biasa (🎮/👤).
+                    const entryIsHost = !!(entryUid && _customHostUid && entryUid === _customHostUid);
+                    // Badge "Pemain" (🎮/👤) hanya relevan untuk POV non-host — dari POV host
+                    // (baik host bermain maupun host jadi spectator) badge ini tidak perlu tampil.
+                    const _entryBadgeHtml = _isCustomRoomCreator
+                        ? ''
+                        : entryIsHost
+                            ? `<span title="Host" style="background:rgba(244,67,54,0.2);border:1px solid rgba(244,67,54,0.4);border-radius:6px;width:26px;height:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:0.7em;line-height:1;box-sizing:border-box;">👑</span>`
+                            : `<span title="Pemain" style="background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.45);border-radius:6px;width:26px;height:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:0.7em;line-height:1;box-sizing:border-box;">${_playerBadgeEmoji}</span>`;
                     slot.innerHTML = `
                         <div id="${cIconId}" style="width:36px;height:36px;border-radius:6px;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f093fb,#f5576c);font-size:1em;font-weight:bold;color:white;flex-shrink:0;${entryUid && !entry.pending ? 'cursor:pointer;' : ''}" ${entryUid && !entry.pending ? `onclick="playSound('button');visitPlayerProfile('${entryUid}')" title="Kunjungi profil ${escHtml(entry.name)}"` : ''}>${cInit}</div>
                         <div id="${cNameId}" class="custom-slot-name" style="flex:1;${entryUid && !entry.pending ? 'cursor:pointer;' : ''}" ${entryUid && !entry.pending ? `onclick="playSound('button');visitPlayerProfile('${entryUid}')" title="Kunjungi profil ${escHtml(entry.name)}"` : ''}>${escHtml(entry.name)}</div>
                         <div id="${cRankId}" class="custom-slot-rank"></div>
-                        <span title="Pemain" style="background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.45);border-radius:6px;width:26px;height:22px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:0.7em;line-height:1;box-sizing:border-box;">🛡️</span>
+                        ${_entryBadgeHtml}
                         ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');clearCustomSlot(${slotPos})">✖</button>` : ''}`;
                     // Fetch avatar + rank frame async (hanya slot yang sudah dikonfirmasi)
                     if (entry.uid && !entry.pending) {
@@ -17382,6 +18042,83 @@
             "Tari Aluyen": "Tarian yang biasanya dilakukan saat upacara pembangunan rumah baru atau pembukaan kebun baru. Gerakannya penuh rasa syukur kepada Tuhan atas tanah yang subur.",
             "Injak Piring": "Tradisi unik di mana orang yang baru pulang dari perantauan atau tamu kehormatan menginjak piring adat sebagai simbol pembersihan diri dan tanda keselamatan telah tiba di kampung halaman.",
             "Ikan Kuah Kuning": "Ikan kuah kuning adalah hidangan tradisional khas wilayah timur Indonesia yang memadukan ikan laut segar (seperti mubara, tongkol, atau kakap) dengan kuah kaldu rempah kaya kunyit. Kuah ini memiliki cita rasa gurih, sedikit asam segar, dan umumnya disajikan sebagai teman pendamping utama menyantap papeda (bubur sagu kenyal).",
+            // ===== PRODUK UNGGULAN & BAHASA DAERAH (76 kartu tambahan) =====
+            "Kerawang Gayo": "Motif sulaman emas khas suku Gayo yang dijahit rapi di atas kain beludru hitam atau merah. Motif ini biasa menghias baju, tas, hingga peci, dan sering jadi oleh-oleh andalan wisatawan dari Aceh.",
+            "Bahasa Aceh": "Bahasa yang dipakai sehari-hari oleh masyarakat Aceh, terutama di pesisir. Bahasa ini punya banyak dialek berbeda di tiap daerah, tapi tetap bisa saling dimengerti oleh sesama penuturnya.",
+            "Kain Ulos": "Kain tenun khas Batak yang dijual sebagai suvenir dan produk unggulan Sumatera Utara, mulai dari selendang hingga taplak meja. Corak dan warnanya beragam, menjadikannya buah tangan favorit wisatawan yang berkunjung ke Danau Toba.",
+            "Bahasa Batak Toba": "Bahasa daerah suku Batak Toba yang dipakai di sekitar Danau Toba dan sekitarnya. Bahasa ini punya banyak istilah kekerabatan yang unik, mencerminkan pentingnya hubungan keluarga bagi orang Batak.",
+            "Rendang Padang": "Rendang kemasan yang dijual sebagai oleh-oleh khas Padang, dimasak kering agar tahan lama dan mudah dibawa bepergian. Karena rasanya yang gurih pedas, rendang menjadi salah satu produk unggulan Sumatera Barat yang diekspor ke berbagai negara.",
+            "Bahasa Minangkabau": "Bahasa daerah masyarakat Minangkabau yang dikenal dengan logatnya yang khas dan berirama. Bahasa ini juga sering dipakai dalam pantun dan petatah-petitih yang penuh nasihat bijak.",
+            "Bolu Kemojo": "Kue bolu berwarna hijau khas Riau yang wangi karena memakai daun suji dan pandan. Bentuknya yang menyerupai bunga kamboja membuatnya jadi camilan favorit saat acara adat maupun hari raya.",
+            "Bahasa Melayu Riau": "Bahasa daerah yang menjadi akar dari bahasa Indonesia, dipakai oleh masyarakat Melayu di Riau sejak dahulu kala. Logatnya lembut dan sering dipenuhi pantun dalam percakapan sehari-hari.",
+            "Kerupuk Atom": "Kerupuk kecil renyah khas Kepulauan Riau yang biasanya berisi ikan dan berbentuk bulat kecil seperti kelereng. Namanya yang unik justru berasal dari bentuknya yang mungil, bukan karena bahan peledak!",
+            "Bahasa Melayu Kepulauan Riau": "Bahasa Melayu yang dipakai masyarakat di gugusan pulau-pulau Kepulauan Riau. Karena letaknya dekat Singapura dan Malaysia, bahasa ini punya banyak kemiripan dengan bahasa Melayu di negara tetangga.",
+            "Batik Jambi": "Batik khas Jambi dengan motif yang terinspirasi dari alam sekitar, seperti bunga, kupu-kupu, dan sungai Batanghari. Warnanya cenderung cerah dan menjadi ciri khas yang membedakannya dari batik daerah lain.",
+            "Bahasa Melayu Jambi": "Bahasa daerah rumpun Melayu yang dipakai masyarakat Jambi dalam kehidupan sehari-hari. Bahasa ini masih sangat dekat dengan bahasa Indonesia karena berasal dari akar rumpun yang sama.",
+            "Sirup Kalamansi": "Minuman segar khas Bengkulu yang terbuat dari buah kalamansi, sejenis jeruk kecil dengan rasa asam manis menyegarkan. Sirup ini populer sebagai oleh-oleh karena rasanya yang unik dan menyegarkan tenggorokan.",
+            "Bahasa Rejang": "Bahasa daerah suku Rejang, salah satu suku tertua di Bengkulu. Uniknya, suku Rejang dahulu memiliki aksara sendiri yang disebut aksara Kaganga sebelum mengenal huruf Latin.",
+            "Pempek Palembang": "Makanan khas Palembang yang terbuat dari ikan dan sagu, disajikan dengan kuah cuko yang asam pedas menyegarkan. Pempek menjadi salah satu produk unggulan Sumatera Selatan yang dikenal hingga ke seluruh Indonesia.",
+            "Bahasa Melayu Palembang": "Bahasa daerah masyarakat Palembang yang merupakan bagian dari rumpun bahasa Melayu. Logat khasnya sering diselingi akhiran '-nyo' dan '-lah' yang membuat percakapannya terdengar akrab.",
+            "Terasi Bangka": "Bumbu penyedap khas Bangka Belitung yang terbuat dari udang rebon yang difermentasi. Aromanya yang khas dan rasanya yang gurih membuat terasi Bangka jadi favorit untuk campuran sambal.",
+            "Bahasa Melayu Bangka": "Bahasa daerah masyarakat Bangka Belitung yang termasuk rumpun Melayu. Dialeknya dipengaruhi oleh sejarah panjang pertambangan timah dan interaksi dengan berbagai suku pendatang.",
+            "Keripik Pisang Lampung": "Camilan renyah khas Lampung yang terbuat dari pisang pilihan, hadir dalam berbagai varian rasa mulai dari manis, cokelat, hingga pedas. Keripik ini menjadi oleh-oleh wajib bagi siapa saja yang berkunjung ke Lampung.",
+            "Bahasa Lampung": "Bahasa daerah masyarakat Lampung yang memiliki aksara sendiri bernama aksara Lampung atau Kaganga. Bahasa ini terbagi menjadi dua dialek besar, yaitu dialek Api dan dialek Nyo.",
+            "Bir Pletok Betawi": "Minuman tradisional khas Betawi yang terbuat dari rempah-rempah seperti jahe dan serai, meski namanya 'bir', minuman ini sama sekali tidak mengandung alkohol. Warnanya merah cerah dan rasanya hangat menyegarkan tubuh.",
+            "Bahasa Betawi": "Bahasa daerah masyarakat asli Jakarta yang dipenuhi dialog santai dan penuh humor. Bahasa ini banyak menyerap kata dari bahasa Melayu, Sunda, Tionghoa, Arab, dan Belanda karena posisinya sebagai kota pelabuhan sejak dahulu.",
+            "Kain Batik Mega Mendung": "Batik khas Cirebon dengan motif awan bergelombang berwarna biru yang melambangkan sifat sabar dan tenang. Motif ini terkenal hingga mancanegara sebagai salah satu ikon batik Jawa Barat.",
+            "Bahasa Sunda": "Bahasa daerah masyarakat Jawa Barat yang dikenal lembut dan sopan, apalagi jika memakai tingkatan bahasa halus. Bahasa Sunda juga punya banyak pantun dan kakawihan atau lagu daerah yang khas.",
+            "Batik Banten": "Batik khas Banten dengan motif yang terinspirasi dari peninggalan Kesultanan Banten, seperti gerabah dan ornamen keraton kuno. Warna dan coraknya mencerminkan sejarah panjang perdagangan di Banten.",
+            "Bahasa Sunda Banten": "Dialek bahasa Sunda yang dipakai masyarakat Banten, sedikit berbeda dari bahasa Sunda Priangan dari segi kosakata dan logat. Dialek ini dipengaruhi oleh sejarah Kesultanan Banten yang ramai jalur perdagangannya.",
+            "Ukiran Kayu Jepara": "Kerajinan ukir kayu khas Jepara yang terkenal hingga ke mancanegara karena detail dan kehalusan pahatannya. Mebel dan patung ukiran Jepara menjadi produk unggulan yang diekspor ke berbagai negara.",
+            "Bahasa Jawa": "Bahasa daerah dengan penutur terbanyak di Indonesia, dipakai oleh masyarakat Jawa Tengah dan sekitarnya. Bahasa ini punya tingkatan sopan santun, mulai dari ngoko yang santai hingga krama yang halus.",
+            "Gudeg Jogja": "Makanan khas Yogyakarta yang terbuat dari nangka muda dimasak dengan santan hingga berwarna cokelat dan rasanya manis gurih. Gudeg biasa disajikan dengan telur, ayam, dan sambal krecek yang menggugah selera.",
+            "Bahasa Jawa Yogyakarta": "Dialek bahasa Jawa yang dipakai di Yogyakarta, dikenal sebagai bahasa Jawa baku karena erat kaitannya dengan tradisi keraton. Tingkatan bahasanya masih dijaga ketat, terutama dalam lingkungan istana.",
+            "Kerajinan Kulit Tanggulangin": "Sentra kerajinan tas dan produk kulit di Tanggulangin, Sidoarjo, yang terkenal dengan kualitas jahitan rapi dan bahan kulit pilihan. Produk unggulan ini banyak dipasarkan ke berbagai kota di Indonesia.",
+            "Bahasa Jawa Arekan": "Dialek bahasa Jawa yang dipakai di wilayah Jawa Timur seperti Surabaya dan Malang, dikenal dengan logatnya yang tegas dan blak-blakan. Dialek Arekan juga terkenal dengan gaya bahasanya yang egaliter tanpa banyak tingkatan formal.",
+            "Kain Tenun Endek": "Kain tenun khas Bali dengan motif dan warna yang cerah, sering dipakai dalam upacara adat maupun busana sehari-hari. Endek kini juga populer sebagai bahan pakaian modern yang modis.",
+            "Bahasa Bali": "Bahasa daerah masyarakat Bali yang memiliki aksara sendiri bernama aksara Bali. Bahasa ini juga mengenal tingkatan sopan santun seperti bahasa alus dan bahasa kasar, tergantung lawan bicaranya.",
+            "Susu Kuda Liar Sumbawa": "Susu khas dari kuda liar Sumbawa yang dipercaya berkhasiat menyehatkan tubuh. Susu ini menjadi produk unggulan Nusa Tenggara Barat yang cukup langka karena hanya dihasilkan dari kuda-kuda liar di padang sabana.",
+            "Bahasa Sasak": "Bahasa daerah suku Sasak, penduduk asli Pulau Lombok. Bahasa ini punya beberapa dialek yang berbeda tergantung wilayahnya, meski secara umum masih bisa saling dimengerti.",
+            "Kain Tenun Ikat NTT": "Kain tenun khas Nusa Tenggara Timur yang dibuat dengan teknik ikat tradisional, prosesnya bisa memakan waktu berbulan-bulan. Setiap motif punya makna dan cerita berbeda sesuai daerah asalnya.",
+            "Bahasa Manggarai": "Bahasa daerah suku Manggarai di Pulau Flores bagian barat. Bahasa ini kaya akan istilah adat, terutama yang berkaitan dengan tradisi caci dan upacara pertanian.",
+            "Lidah Buaya Pontianak": "Tanaman lidah buaya raksasa yang menjadi produk unggulan khas Pontianak, diolah menjadi berbagai makanan dan minuman seperti dodol dan teh. Ukuran daunnya bisa jauh lebih besar dari lidah buaya pada umumnya.",
+            "Bahasa Dayak Kanayatn": "Bahasa daerah suku Dayak Kanayatn yang tinggal di Kalimantan Barat. Bahasa ini masih dipakai aktif dalam upacara adat dan kehidupan sehari-hari masyarakat pedalaman.",
+            "Kerajinan Rotan Dayak": "Anyaman rotan khas suku Dayak yang diolah menjadi tas, tikar, hingga perabot rumah tangga. Kerajinan ini menjadi produk unggulan Kalimantan Tengah karena kualitas anyamannya yang kuat dan rapi.",
+            "Bahasa Dayak Ngaju": "Bahasa daerah suku Dayak Ngaju yang banyak dipakai di sepanjang aliran sungai di Kalimantan Tengah. Bahasa ini juga sering dipakai dalam syair dan mantra adat suku Dayak.",
+            "Kain Sasirangan": "Kain celup khas Kalimantan Selatan dengan motif warna-warni yang dibuat dengan cara dijelujur dan diikat sebelum dicelup. Dahulu kain ini dipercaya punya khasiat menyembuhkan, kini menjadi busana modis sehari-hari.",
+            "Bahasa Banjar": "Bahasa daerah suku Banjar di Kalimantan Selatan yang banyak dipengaruhi oleh bahasa Melayu dan Jawa. Bahasa ini juga dipakai dalam syair-syair Banjar yang penuh nasihat kehidupan.",
+            "Amplang Ikan Pipih": "Kerupuk ikan khas Kalimantan Timur yang gurih dan renyah, terbuat dari ikan tenggiri atau ikan pipih pilihan. Amplang menjadi oleh-oleh favorit karena rasanya yang gurih dan tahan lama.",
+            "Bahasa Kutai": "Bahasa daerah masyarakat Kutai di Kalimantan Timur yang erat kaitannya dengan sejarah Kesultanan Kutai Kartanegara, salah satu kerajaan tertua di Indonesia.",
+            "Kepiting Tarakan": "Kepiting bakau berukuran besar dan berdaging tebal yang menjadi produk unggulan Kalimantan Utara. Kepiting ini banyak diekspor ke luar negeri karena kualitasnya yang tinggi.",
+            "Bahasa Tidung": "Bahasa daerah suku Tidung yang mendiami wilayah pesisir Kalimantan Utara. Suku Tidung dikenal sebagai pelaut ulung sejak zaman dahulu, sehingga bahasanya banyak mengandung istilah kelautan.",
+            "Pala Siau": "Rempah pala berkualitas tinggi dari Pulau Siau, Sulawesi Utara, yang terkenal hingga ke pasar dunia karena aromanya yang khas. Pala menjadi salah satu komoditas rempah andalan sejak zaman penjajahan.",
+            "Bahasa Melayu Manado": "Bahasa pergaulan sehari-hari masyarakat Sulawesi Utara yang merupakan campuran bahasa Melayu dengan bahasa daerah dan Belanda. Logatnya khas, cepat, dan penuh semangat.",
+            "Kain Karawang Upahiya": "Kain sulam khas Gorontalo dengan motif sulaman rumit yang dikerjakan langsung dengan tangan. Karawang Gorontalo dikenal sebagai kerajinan bernilai tinggi dan menjadi kebanggaan daerah.",
+            "Bahasa Gorontalo": "Bahasa daerah masyarakat Gorontalo yang berbeda dari bahasa daerah lain di Sulawesi. Bahasa ini masih dipakai aktif dalam kehidupan sehari-hari dan upacara adat setempat.",
+            "Bawang Goreng Palu": "Bawang goreng khas Palu yang renyah dan gurih, sering dipakai sebagai taburan berbagai masakan. Produk ini menjadi salah satu unggulan Sulawesi Tengah yang dipasarkan ke berbagai daerah.",
+            "Bahasa Kaili": "Bahasa daerah suku Kaili yang mendiami wilayah Sulawesi Tengah, terutama di sekitar Palu. Bahasa ini punya beberapa dialek berbeda tergantung wilayah tempat tinggal penuturnya.",
+            "Sutra Mandar": "Kain sutra tenun khas suku Mandar, juga disebut Lipa Saqbe, yang ditenun dengan benang sutra asli. Kain ini terkenal karena keindahan motif dan kehalusan tenunannya.",
+            "Bahasa Mandar": "Bahasa daerah suku Mandar di Sulawesi Barat yang erat kaitannya dengan tradisi bahari, karena suku Mandar dikenal sebagai pelaut dan nelayan yang tangguh.",
+            "Kopi Toraja": "Kopi khas Toraja yang terkenal hingga ke mancanegara karena rasanya yang khas dan aromanya yang kuat. Kopi ini tumbuh subur di dataran tinggi Toraja dengan cita rasa yang disukai pecinta kopi dunia.",
+            "Bahasa Bugis": "Bahasa daerah suku Bugis yang memiliki aksara sendiri bernama aksara Lontara. Suku Bugis dikenal sebagai pelaut ulung, sehingga bahasanya banyak dipakai di berbagai wilayah pesisir Nusantara.",
+            "Kacang Mete Kendari": "Kacang mete berkualitas tinggi dari Kendari, Sulawesi Tenggara, yang renyah dan gurih. Kacang mete menjadi salah satu komoditas ekspor andalan daerah ini.",
+            "Bahasa Tolaki": "Bahasa daerah suku Tolaki yang mendiami wilayah Sulawesi Tenggara. Bahasa ini masih digunakan aktif dalam kehidupan sehari-hari dan berbagai upacara adat setempat.",
+            "Minyak Kayu Putih Buru": "Minyak kayu putih berkualitas tinggi yang dihasilkan dari Pulau Buru, Maluku. Minyak ini dipercaya berkhasiat menghangatkan tubuh dan menjadi produk unggulan yang dikenal luas di Indonesia.",
+            "Bahasa Melayu Ambon": "Bahasa pergaulan sehari-hari masyarakat Maluku yang merupakan perpaduan bahasa Melayu dengan bahasa daerah dan Portugis. Logatnya khas dengan nada naik turun yang ceria.",
+            "Batu Bacan": "Batu akik atau permata khas Pulau Bacan, Maluku Utara, yang terkenal karena keindahan warna hijaunya. Batu ini sempat menjadi tren perhiasan populer di seluruh Indonesia.",
+            "Bahasa Melayu Ternate": "Bahasa pergaulan masyarakat Maluku Utara yang berkembang dari sejarah Kesultanan Ternate, salah satu kerajaan maritim terbesar di Nusantara pada masa lalu.",
+            "Noken": "Tas rajut tradisional khas Papua yang terbuat dari serat kayu atau kulit kayu, dianyam dengan tangan dan dipakai untuk membawa berbagai barang. UNESCO telah mengakui Noken sebagai warisan budaya tak benda dunia.",
+            "Bahasa Biak": "Bahasa daerah suku Biak yang mendiami Kepulauan Biak, Papua. Bahasa ini kaya akan syair dan nyanyian adat yang menceritakan kehidupan masyarakat pesisir dan laut.",
+            "Rumput Kebar": "Tumbuhan herbal khas dari daerah Kebar, Papua Barat, yang dipercaya memiliki banyak khasiat untuk kesehatan. Rumput ini menjadi produk unggulan yang dicari banyak orang dari luar daerah.",
+            "Bahasa Hatam": "Bahasa daerah suku Hatam yang mendiami wilayah pegunungan Papua Barat. Bahasa ini masih dipakai aktif dalam kehidupan sehari-hari masyarakat setempat.",
+            "Anyaman Pandan Moi": "Kerajinan anyaman berbahan daun pandan khas suku Moi di Papua Barat Daya, dibuat menjadi tikar, tas, hingga topi. Kerajinan ini menjadi produk unggulan yang mencerminkan kreativitas masyarakat setempat.",
+            "Bahasa Moi": "Bahasa daerah suku Moi yang mendiami wilayah Papua Barat Daya, terutama di sekitar Sorong. Bahasa ini masih dilestarikan aktif oleh masyarakat adat setempat.",
+            "Abon Daging Rusa Merauke": "Abon khas Merauke yang terbuat dari daging rusa, rasanya gurih dan menjadi produk unggulan Papua Selatan yang unik. Rusa memang banyak dijumpai di padang sabana wilayah Merauke.",
+            "Bahasa Asmat": "Bahasa daerah suku Asmat yang terkenal dengan seni ukirnya yang mendunia. Bahasa ini juga kaya akan istilah yang berkaitan dengan hutan dan sungai, tempat suku Asmat hidup dan berkarya.",
+            "Kopi Moanemani": "Kopi khas dataran tinggi Moanemani, Papua Tengah, yang tumbuh di ketinggian dan memiliki cita rasa khas. Kopi ini menjadi salah satu produk unggulan yang mulai dikenal luas.",
+            "Bahasa Mee": "Bahasa daerah suku Mee yang mendiami wilayah pegunungan tengah Papua. Bahasa ini masih dipakai aktif dalam kehidupan sehari-hari dan berbagai upacara adat setempat.",
+            "Madu Wamena": "Madu hutan asli dari Wamena, Papua Pegunungan, yang dihasilkan lebah liar di hutan-hutan pegunungan. Madu ini terkenal karena kemurnian dan khasiatnya yang tinggi.",
+            "Bahasa Dani": "Bahasa daerah suku Dani yang mendiami Lembah Baliem, Papua Pegunungan. Bahasa ini masih digunakan aktif dalam kehidupan sehari-hari dan berbagai upacara adat, termasuk Festival Lembah Baliem.",
         };
 
         // =============================================
@@ -17390,15 +18127,17 @@
         function showCardDescModal(cardData, provinceName) {
             const desc = cardDescriptions[cardData.name] || 'Deskripsi belum tersedia untuk kartu ini.';
             const rarityLabels = {
-                mythic:'👑 Mistik', legendary:'🔥 Legendaris', epic:'👾 Epik',
-                rareplus:'💎 Spesial', rarestar:'💙 Elite', rare:'💠 Langka',
-                uncommon:'💚 Umum', uncommonplus:'🍀 Unik',
-                commonplus:'🟢 Biasa', common:'⚪ Dasar'
+                magis:'Magis', sakral:'Sakral',
+                mythic:'Mistik', legendary:'Legendaris', epic:'Epik',
+                rareplus:'Spesial', rarestar:'Elite', rare:'Langka',
+                uncommon:'Unik', uncommonplus:'Umum',
+                commonplus:'Biasa', common:'Dasar'
             };
             const typeIcons = {
                 'Sumber Daya Alam':'🌍', 'Bangunan Bersejarah':'🏛️', 'Sektor Ekonomi':'💰',
                 'Rumah Adat':'🏠', 'Senjata Tradisional':'🗡️', 'Pakaian Adat':'👘',
-                'Alat Musik':'🎵', 'Tarian':'💃', 'Adat Istiadat':'🏮', 'Makanan Khas':'🍜'
+                'Alat Musik':'🎵', 'Tarian':'💃', 'Adat Istiadat':'🏮', 'Makanan Khas':'🍜',
+                'Produk Unggulan':'🏆', 'Bahasa Daerah':'🗣️'
             };
             const existing = document.getElementById('enc-card-desc-modal');
             if (existing) existing.remove();
@@ -17433,7 +18172,7 @@
                         </span>
                         <span style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
                             border-radius:20px;padding:4px 12px;font-size:0.78em;color:#fff;">
-                            ${rarityLabels[cardData.rarity] || cardData.rarity}
+                            ${rarityLogoHTML(cardData.rarity, 'rarity-logo-inline')} ${rarityLabels[cardData.rarity] || cardData.rarity}
                         </span>
                     </div>
                     <div style="
@@ -17492,20 +18231,22 @@
                     powerBadge.textContent = '⚡ Kekuatan ' + cardData.power;
 
                     const rarityLabels = {
-                        mythic:      '👑 Mistik',
-                        legendary:   '🔥 Legendaris',
-                        epic:        '👾 Epik',
-                        rareplus:    '💎 Spesial',
-                        rarestar:    '💙 Elite',
-                        rare:        '💠 Langka',
-                        uncommon:    '💚 Umum',
-                        uncommonplus:'🍀 Unik',
-                        commonplus:  '🟢 Biasa',
-                        common:      '⚪ Dasar'
+                        magis:       'Magis',
+                        sakral:      'Sakral',
+                        mythic:      'Mistik',
+                        legendary:   'Legendaris',
+                        epic:        'Epik',
+                        rareplus:    'Spesial',
+                        rarestar:    'Elite',
+                        rare:        'Langka',
+                        uncommon:    'Unik',
+                        uncommonplus:'Umum',
+                        commonplus:  'Biasa',
+                        common:      'Dasar'
                     };
                     const rarityBadge = document.createElement('div');
                     rarityBadge.className = `enc-rarity-badge ${cardData.rarity}`;
-                    rarityBadge.textContent = rarityLabels[cardData.rarity] || cardData.rarity;
+                    rarityBadge.innerHTML = `${rarityLogoHTML(cardData.rarity, 'rarity-logo-inline')} ${rarityLabels[cardData.rarity] || cardData.rarity}`;
 
                       wrapper.appendChild(cardEl);
                     wrapper.appendChild(powerBadge);

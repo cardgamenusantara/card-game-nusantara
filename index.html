@@ -12017,7 +12017,7 @@
                 if (p.id === window.myPlayerId) slot.classList.add('is-me');
                 if (_votingState.votedIds.includes(p.id)) slot.classList.add('voted-hidden');
                 slot.innerHTML = `
-                    <div class="voting-slot-name">${p.isBot ? '🤖 ' : ''}${_escapeHtmlVoting(p.name)}</div>
+                    <div class="voting-slot-name">${(p.isBot && _isCustomRoom) ? '🤖 ' : ''}${_escapeHtmlVoting(p.name)}</div>
                     <div class="voting-slot-icon">${_votingState.votedIds.includes(p.id) ? '❓' : '⏳'}</div>
                 `;
                 wrap.appendChild(slot);

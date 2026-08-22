@@ -14055,7 +14055,13 @@
                         let match;
                         while ((match = regexEmoji.exec(teks)) !== null) {
                             const emoji = match[0];
-                            const namaFile = MATERI_EMOJI_KE_GAMBAR[emoji];
+                            // [FIX] Khusus judul section "Produk Daerah yang Mendunia" (Topik C), globe pakai
+                            // globe1.png, bukan globe.png — supaya beda dari section "Akulturasi & Pelestarian
+                            // Budaya" (Topik A) yang juga memakai emoji 🌐 tapi tetap globe.png.
+                            let namaFile = MATERI_EMOJI_KE_GAMBAR[emoji];
+                            if (emoji === '🌐' && teks.includes('Produk Daerah yang Mendunia')) {
+                                namaFile = 'globe1';
+                            }
                             if (match.index > lastIndex) {
                                 frag.appendChild(document.createTextNode(teks.slice(lastIndex, match.index)));
                             }

@@ -936,7 +936,11 @@
         /* ======================= POPUP VOTING HAK TAHAP 1 ======================= */
         .voting-popup-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.82); z-index: 99997;
+            background: rgba(0,0,0,0.82); z-index: 99994;
+            /* [FIX] Sebelumnya 99997 (lebih tinggi dari match-result-modal & game-over-modal
+               yang z-index:99995) sehingga popup voting menutupi kedua modal itu.
+               Diturunkan ke 99994 supaya voting-popup-overlay selalu berada DI BELAKANG
+               match-result-modal dan game-over-modal. */
             align-items: center; justify-content: center; padding: 16px;
         }
         .voting-popup-overlay.active { display: flex; }
@@ -3942,7 +3946,11 @@
 
     <!-- ── GAME PAUSED OVERLAY ────────────────────────────────── -->
     <div id="game-paused-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; min-height:100dvh;
-        background:rgba(0,0,0,0.7); z-index:99990;
+        background:rgba(0,0,0,0.7); z-index:99997;
+        /* [FIX] Sebelumnya 99990 — lebih rendah dari match-result-modal/game-over-modal (99995)
+           dan voting-popup-overlay (99994), jadi overlay "dijeda" ini malah tertutup keduanya.
+           Dinaikkan ke 99997 supaya selalu tampil PALING DEPAN dibanding kedua modal & popup voting
+           (tapi tetap di bawah reconnecting-overlay 99998 & toast notifikasi 99999). */
         justify-content:center; align-items:center;
         backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);
         pointer-events:none;">
@@ -5930,6 +5938,8 @@
     <div class="voting-popup-overlay" id="voting-popup-overlay">
         <div class="voting-popup-content">
             <div class="voting-popup-title" id="voting-popup-title">🗳️ Voting Hak Jatuh Kartu Tahap 1</div>
+            <!-- [FITUR BARU] Tombol Jeda/Lanjutkan khusus penonton, hanya tampil selama voting berlangsung -->
+            <button id="btn-pause-voting" onclick="window._toggleVotingPause()" style="display:none; margin:6px auto 0; padding:5px 14px; font-size:0.75em; font-weight:bold; border-radius:20px; border:2px solid rgba(255,255,255,0.7); cursor:pointer; background:linear-gradient(135deg,#ff9800,#e65100); color:#fff; box-shadow:0 3px 10px rgba(0,0,0,0.3);">⏸️ Jeda Voting</button>
             <div class="voting-popup-subtitle" id="voting-popup-subtitle">Tidak ada yang otomatis berhak — ayo tentukan lewat voting!</div>
             <div class="voting-popup-timer" id="voting-popup-timer"><span id="voting-popup-timer-num">7</span></div>
             <div class="voting-popup-slots" id="voting-popup-slots"></div>
@@ -10972,10 +10982,25 @@
                 case 'GAME_PAUSE_STATE':
                     window._gamePaused = !!data.isPaused;
                     _updatePauseButton();
+                    // [FIX] Kalau voting Tahap 1 sedang berlangsung, sinkronkan countdown visualnya
+                    // supaya benar-benar ikut berhenti selama pause (bukan cuma terlihat jalan terus
+                    // padahal server-nya sudah menunggu resume).
+                    if (_votingState.active) {
+                        if (window._gamePaused) {
+                            _votingState.pausedAt = Date.now();
+                        } else if (_votingState.pausedAt) {
+                            // Geser deadline maju sebesar durasi jeda, supaya sisa waktu countdown
+                            // tetap sama persis seperti sebelum dijeda (konsisten dgn server yang
+                            // juga "membekukan" timernya selama isPaused, lihat checkVotingTimeout).
+                            _votingState.deadline += (Date.now() - _votingState.pausedAt);
+                            _votingState.pausedAt = null;
+                        }
+                        _tickVotingCountdown();
+                    }
                     if (data.isPaused) {
-                        showToast('⏸️ Pertandingan dijeda oleh host', 'warning');
+                        showToast('⏸️ Pertandingan/voting sedang dijeda', 'warning');
                     } else {
-                        showToast('▶️ Pertandingan dilanjutkan', 'success');
+                        showToast('▶️ Pertandingan/voting dilanjutkan', 'success');
                     }
                     break;
 
@@ -11172,7 +11197,11 @@
             // [SIMPLE] Tampilkan/sembunyikan indikator AFK berdasarkan state server
             if (!_isSpectator && myPlayerId && newState.players) {
                 const _me = newState.players.find(p => p.id === myPlayerId);
-                if (_me) setAutoMode(!!_me.autoMode);
+                // [FIX] Indikator "Mode Otomatis" harus otomatis hilang begitu kartu pemain
+                // sudah habis (menang) atau pemain sudah selesai (winner) — meskipun server
+                // belum sempat mereset flag autoMode-nya (mis. race-condition saat menang
+                // tepat ketika sedang disconnect).
+                if (_me) setAutoMode(!!_me.autoMode && !_me.winner && !!_me.hand && _me.hand.length > 0);
             }
             _prevRound = newState.round;
 
@@ -11200,10 +11229,15 @@
                     if (p.winner && !_prevWinner[p.id]) {
                         const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
                         const medal = medals[p.rank] || '💀';
-                        if (p.rank <= 3) {
+                        // [FIX] Pakai flag p.surrendered (bukan tebakan dari rank>3) supaya pemain
+                        // yang cuma kehabisan giliran (bukan benar-benar klik "Menyerah") tidak
+                        // ikut dilabeli "menyerah".
+                        if (p.surrendered) {
+                            showNotification(`🏳️ ${_shortName(p.name)} menyerah! Peringkat ${p.rank}`);
+                        } else if (p.rank <= 3) {
                             showNotification(`${medal} ${_shortName(p.name)} menang! Peringkat ${p.rank}`);
                         } else {
-                            showNotification(`🏳️ ${_shortName(p.name)} menyerah! Peringkat ${p.rank}`);
+                            showNotification(`💀 ${_shortName(p.name)} mendapat peringkat terakhir`);
                         }
                         // [AUTO SHOW HASIL] Saat pemain (ranked maupun custom match) baru saja
                         // selesai — entah karena kartunya habis (menang) atau menyerah —
@@ -11296,18 +11330,11 @@
             }
 
             // Tombol stiker
+            // [FIX] Spectator tidak ikut main, jadi tombol kirim stiker disembunyikan
+            // khusus untuk POV spectator (berbeda dari POV pemain di updateUI()).
             const stickerBtn = document.getElementById('sticker-btn');
             if (stickerBtn) {
-                stickerBtn.style.backgroundImage = `url('${av('gambar/stiker/tombol_stiker.png')}')`;
-                // Tombol stiker selalu tampil selama match aktif (tidak tergantung currentProvince,
-                // beda dengan province-info-btn yang memang hanya relevan saat ada kartu provinsi aktif)
-                stickerBtn.style.display = 'flex';
-                if (!stickerBtn._listenerAdded) { stickerBtn.addEventListener('click', openStickerPopup); stickerBtn._listenerAdded = true; }
-            }
-            const stickerCloseBtn = document.getElementById('sticker-popup-close');
-            if (stickerCloseBtn && !stickerCloseBtn._listenerAdded) {
-                stickerCloseBtn.addEventListener('click', closeStickerPopup);
-                stickerCloseBtn._listenerAdded = true;
+                stickerBtn.style.display = 'none';
             }
 
             // Close province info modal (spectator path)
@@ -11983,6 +12010,7 @@
             _renderVotingSlots();
             _renderVotingChoices();
             overlay.classList.add('active');
+            _updatePauseButton(); // [FITUR BARU] tampilkan tombol Jeda Voting untuk penonton
 
             if (_votingState.countdownTimer) clearInterval(_votingState.countdownTimer);
             _votingState.countdownTimer = setInterval(_tickVotingCountdown, 200);
@@ -11991,12 +12019,19 @@
 
         function _tickVotingCountdown() {
             if (!_votingState.active) return;
+            const timerEl = document.getElementById('voting-popup-timer');
+            const numEl = document.getElementById('voting-popup-timer-num');
+            // [FIX] Selama dijeda, bekukan angka & progress countdown — jangan ikut berkurang.
+            // Deadline-nya digeser saat resume (lihat handler GAME_PAUSE_STATE) supaya begitu
+            // lanjut, sisa waktunya tetap akurat seperti sebelum dijeda.
+            if (window._gamePaused) {
+                if (numEl) numEl.textContent = '⏸️';
+                return;
+            }
             const remainMs = Math.max(0, _votingState.deadline - Date.now());
             const remainSec = Math.ceil(remainMs / 1000);
             const totalSec = 10;
             const pct = Math.max(0, Math.min(100, (remainMs / (totalSec * 1000)) * 100));
-            const timerEl = document.getElementById('voting-popup-timer');
-            const numEl = document.getElementById('voting-popup-timer-num');
             if (timerEl) timerEl.style.setProperty('--voting-pct', pct + '%');
             if (numEl) numEl.textContent = remainSec;
             if (timerEl) timerEl.classList.toggle('urgent', remainSec <= 3);
@@ -12129,6 +12164,11 @@
         function handleVotingReveal(data) {
             if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
             _votingState.active = false;
+            // [FIX] Bersihkan area pilihan (tombol vote ATAU teks "Kamu sedang tidak ikut voting ini
+            // — menunggu hasil..." untuk non-peserta) — sebelumnya teks ini nempel terus berdampingan
+            // dengan hasil "✅ ... menang!" karena tidak pernah dibersihkan saat reveal.
+            const choicesWrap = document.getElementById('voting-popup-choices');
+            if (choicesWrap) choicesWrap.innerHTML = '';
             const choices = data.choices || {};
             const emojiMap = { putih: '⬜', hitam: '⬛', batu: '✊', gunting: '✌️', kertas: '✋' };
 
@@ -12180,13 +12220,14 @@
                     result.textContent = `✅ Kelompok suara lebih sedikit menang: ${wNames}`;
                 }
             }
+            _updatePauseButton(); // [FIX] tombol "Jeda Voting" langsung hilang begitu hasil keluar
         }
 
         function handleVotingEnd() {
             _votingState.active = false;
             if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
             const overlay = document.getElementById('voting-popup-overlay');
-            setTimeout(() => { if (overlay) overlay.classList.remove('active'); }, 900);
+            setTimeout(() => { if (overlay) overlay.classList.remove('active'); _updatePauseButton(); }, 900);
         }
 
         function openStickerPopup() {
@@ -12675,6 +12716,7 @@
             document.getElementById('match-result-modal').classList.remove('active');
             // [VOTING TAHAP 1] Tutup popup voting jika game berakhir saat voting masih berlangsung
             document.getElementById('voting-popup-overlay')?.classList.remove('active');
+            _updatePauseButton(); // [FITUR BARU] sembunyikan tombol Jeda Voting saat popup ditutup
             if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
             _votingState.active = false;
 
@@ -12731,7 +12773,9 @@
                     // Tambahkan catatan "Custom Match" agar tidak membingungkan
                     div.textContent = `${label} - ${getBotDisplayName(p)} (${p.hand ? p.hand.length : p.cardsLeft || 0} kartu tersisa)${isMe ? '  ← Kamu' : ''}`;
                 } else {
-                    div.textContent = `${medals[p.rank - 1] || '🎖️'} - ${getBotDisplayName(p)} (${p.hand ? p.hand.length : p.cardsLeft || 0} kartu tersisa)${isMe ? '  ← Kamu' : ''}`;
+                    // [FIX] Pemain yang menekan tombol "Menyerah" ditandai tengkorak, bukan medali
+                    const _rankIcon = p.surrendered ? '💀' : (medals[p.rank - 1] || '🎖️');
+                    div.textContent = `${_rankIcon} - ${getBotDisplayName(p)} (${p.hand ? p.hand.length : p.cardsLeft || 0} kartu tersisa)${isMe ? '  ← Kamu' : ''}`;
                 }
                 rankings.appendChild(div);
             });
@@ -12876,6 +12920,10 @@
                     rankLabel = isCustomLoser
                         ? `💀 Kalah (Peringkat ${p.rank})`
                         : (medals[p.rank - 1] || `🎖️ Peringkat ${p.rank}`);
+                } else if (p.winner && p.surrendered) {
+                    // [FIX] Pemain yang benar-benar menekan tombol "Menyerah" ditandai
+                    // tengkorak, bukan medali — meskipun rank-nya tetap dihitung normal.
+                    rankLabel = `💀 Menyerah (Peringkat ${p.rank})`;
                 } else {
                     rankLabel = p.winner
                         ? (medals[p.rank - 1] || `🎖️ Peringkat ${p.rank}`)
@@ -13079,6 +13127,20 @@
                     : 'linear-gradient(135deg,#ff9800,#e65100)';
                 btn.title = isPaused ? 'Klik untuk melanjutkan pertandingan' : 'Klik untuk menjeda pertandingan';
             }
+            // [FITUR BARU] Tombol Jeda Voting — tampil untuk SEMUA penonton (bukan cuma host)
+            // selama popup voting Tahap 1 sedang terbuka.
+            const btnVote = document.getElementById('btn-pause-voting');
+            if (btnVote) {
+                // [FIX] Selain cek popup terbuka, cek juga _votingState.active — supaya tombol
+                // langsung hilang begitu hasil di-reveal (bukan nunggu popup benar2 tertutup
+                // beberapa detik kemudian).
+                const votingOpen = document.getElementById('voting-popup-overlay')?.classList.contains('active') && _votingState.active;
+                btnVote.style.display = (_isSpectator && votingOpen) ? 'inline-block' : 'none';
+                btnVote.innerHTML = isPaused ? '▶️ Lanjutkan Voting' : '⏸️ Jeda Voting';
+                btnVote.style.background = isPaused
+                    ? 'linear-gradient(135deg,#4caf50,#388e3c)'
+                    : 'linear-gradient(135deg,#ff9800,#e65100)';
+            }
             // Tampilkan/sembunyikan overlay paused untuk SEMUA pemain & penonton
             const overlay = document.getElementById('game-paused-overlay');
             if (overlay) {
@@ -13107,6 +13169,26 @@
             }
         };
         // ── END PAUSE GAME ────────────────────────────────────────────────
+
+        // ── PAUSE VOTING (semua penonton, khusus selama voting Tahap 1) ────
+        window._toggleVotingPause = function() {
+            playSound('button');
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showToast('❌ Koneksi ke server terputus', 'error');
+                return;
+            }
+            const userUid = currentUser ? currentUser.uid : (lsGet(LS.USER_UID) || '');
+            if (!userUid) {
+                showToast('❌ Tidak dapat mengidentifikasi pengguna', 'error');
+                return;
+            }
+            try {
+                ws.send(JSON.stringify({ type: 'PAUSE_VOTING', userUid }));
+            } catch(e) {
+                showToast('❌ Gagal mengirim perintah jeda voting', 'error');
+            }
+        };
+        // ── END PAUSE VOTING ────────────────────────────────────────────────
 
         window.goToHome = function goToHome() {
             if (goToHomeInProgress) return; // guard double-click
@@ -13255,6 +13337,12 @@
                 const el = document.getElementById(id);
                 if (el) el.classList.remove('active');
             });
+            // [FIX] Popup voting Tahap 1 juga harus ikut tertutup — sebelumnya tidak ada di daftar
+            // di atas, jadi kalau user klik "Kembali ke Home" tepat saat voting masih berlangsung,
+            // popup-nya nempel terus (karena position:fixed) sampai halaman utama.
+            document.getElementById('voting-popup-overlay')?.classList.remove('active');
+            if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
+            _votingState.active = false;
 
             // Hentikan bgMusic2 (musik game) jika masih berjalan
             try {
@@ -13849,11 +13937,9 @@
         }
 
         // Fungsi khusus: klik "Hasil Pertandingan" dari surrender-choice-modal
-        // Memastikan pause overlay tidak menutupi match-result-modal
         window._surrenderShowResult = function _surrenderShowResult() {
             // Tutup surrender-choice-modal
             document.getElementById('surrender-choice-modal').classList.remove('active');
-            // Tampilkan match-result-modal (z-index 99995 > pause overlay 99990)
             showMatchResult();
         }
 
@@ -16938,7 +17024,7 @@
                     slot.classList.add('bot-slot');
                     slot.innerHTML = `
                         <div class="custom-slot-num">🤖</div>
-                        <div class="custom-slot-name">Bot Level ${entry.level} <span style="font-size:0.75em;color:rgba(255,255,255,0.4);">(${levelLabel})</span></div>
+                        <div class="custom-slot-name">Bot ${slotPos} Level ${entry.level} <span style="font-size:0.75em;color:rgba(255,255,255,0.4);">(${levelLabel})</span></div>
                         ${canManageBots ? `<button class="custom-slot-clear" onclick="playSound('button');removeBotFromRoom(${slotPos})" title="Hapus bot">✖</button>` : ''}`;
                 } else if (entry) {
                     // Slot teman — gunakan slotPos asli untuk kick

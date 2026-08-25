@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -10593,7 +10592,7 @@
                     const mandatory = data.mandatory || 'Bangka Belitung';
                     // Update subtitle dengan jumlah provinsi aktual
                     const subtitleEl = document.querySelector('#provinces-preview .prov-preview-subtitle');
-                    if (subtitleEl) subtitleEl.textContent = `${provinces.length} Provinsi yang akan dimainkan di match ini:`;
+                    if (subtitleEl) subtitleEl.textContent = `${provinces.length} Provinsi yang akan dimainkan di pertandingan ini:`;
                     const grid = document.getElementById('prov-grid');
                     if (grid) {
                         grid.innerHTML = '';
@@ -12786,7 +12785,7 @@
             if (_isCustomRoom) {
                 const infoBanner = document.createElement('div');
                 infoBanner.style.cssText = 'margin-top:12px;padding:8px 12px;border-radius:8px;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);color:#c084fc;font-size:0.82em;text-align:center;';
-                infoBanner.textContent = '⚔️ Pertandingan Tantang — Hasil ini tidak mempengaruhi rank, Poin Pengalaman, atau riwayat pertandingan.';
+                infoBanner.textContent = '⚔️ Pertandingan Tantang — Hasil ini tidak mempengaruhi peringkat, Poin Pengalaman, atau riwayat pertandingan.';
                 rankings.appendChild(infoBanner);
             }
 
@@ -12950,7 +12949,7 @@
             if (_isCustomRoom) {
                 const cmBanner = document.createElement('div');
                 cmBanner.style.cssText = 'margin-top:10px;padding:7px 12px;border-radius:8px;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);color:#c084fc;font-size:0.8em;text-align:center;';
-                cmBanner.textContent = '⚔️ Pertandingan Tantang — Tidak mempengaruhi rank, Poin Pengalaman, atau riwayat.';
+                cmBanner.textContent = '⚔️ Pertandingan Tantang — Tidak mempengaruhi peringkat, Poin Pengalaman, atau riwayat.';
                 resultRankDiv.appendChild(cmBanner);
             }
 
@@ -14101,6 +14100,16 @@
                             // gambar sendiri, beda dari "🗺️ SDA & Jenis Aktivitas Ekonomi" (Topik B, peta.png)
                             if (emoji === '🗺️' && teks.includes('Tujuan Pembelajaran')) {
                                 namaFile = 'peta1';
+                            }
+                            // [FIX] Tombol "🔄 Coba Lagi" di hasil Kuis pakai gambar sendiri,
+                            // beda dari kartu Kosakata "🔄 Akulturasi" (Topik A, panah_putar.png)
+                            if (emoji === '🔄' && teks.includes('Coba Lagi')) {
+                                namaFile = 'panah_putar1';
+                            }
+                            // [FIX] Tombol "📋 Lihat Pembahasan" di hasil Kuis pakai gambar sendiri,
+                            // beda dari judul "📋 Komponen Brosur Promosi" (Topik C, papan_klip.png)
+                            if (emoji === '📋' && teks.includes('Lihat Pembahasan')) {
+                                namaFile = 'papan_klip1';
                             }
                             if (match.index > lastIndex) {
                                 frag.appendChild(document.createTextNode(teks.slice(lastIndex, match.index)));

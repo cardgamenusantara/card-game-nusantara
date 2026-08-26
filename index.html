@@ -9147,6 +9147,60 @@
         soundEffects.forcePick.volume = 0.6;
         soundEffects.drawCard.volume = 0.5;
 
+        // [FIX RACE KONEKSI LEMAH] Saat koneksi lemah, browser bisa lama meng-"gantung" (pending)
+        // permintaan play() bgMusic (bg1) karena masih men-download/buffer bg_music.mp3.
+        // Kalau dalam masa pending itu user sudah keburu pindah ke halaman pertandingan
+        // (kode lain sudah memanggil bgMusic.pause() + memutar bgMusic2), promise play() yang
+        // TELAT resolve (begitu koneksi stabil & file selesai dimuat) tetap akan membuat bg1
+        // benar-benar mulai terdengar — karena pause() yang dipanggil SAAT promise masih pending
+        // tidak membatalkan permintaan play() tersebut (perilaku baku HTMLMediaElement di browser).
+        // Wrapper ini mengecek ulang TEPAT saat play() benar-benar berhasil: kalau ternyata saat
+        // itu kita sudah berada di halaman pertandingan (atau bgMusic2 sedang aktif), bg1 langsung
+        // dihentikan lagi seketika, sehingga tidak sempat kedengaran menumpuk dengan musik pertandingan.
+        (function() {
+            const _origBgMusicPlay = soundEffects.bgMusic.play.bind(soundEffects.bgMusic);
+            soundEffects.bgMusic.play = function() {
+                const p = _origBgMusicPlay();
+                if (p && typeof p.then === 'function') {
+                    p.then(() => {
+                        const gc = document.getElementById('game-container');
+                        const inMatch = gc && gc.classList.contains('active');
+                        if (inMatch || !soundEffects.bgMusic2.paused) {
+                            soundEffects.bgMusic.pause();
+                            soundEffects.bgMusic.currentTime = 0;
+                        }
+                    }).catch(() => {});
+                }
+                return p;
+            };
+        })();
+
+        // [FIX RACE KONEKSI LEMAH - bg2] Kebalikan dari kasus bg1 di atas: kalau permintaan
+        // play() bgMusic2 (musik pertandingan) menggantung karena koneksi lemah saat masih di
+        // dalam match, lalu user keburu keluar dari pertandingan (menang/kalah/menyerah/kembali
+        // ke home) sebelum promise itu selesai, pause() yang sudah dipanggil di titik keluar
+        // tidak membatalkan permintaan play() yang menggantung tsb. Begitu koneksi stabil &
+        // file selesai dimuat, bg2 bisa tiba-tiba mulai terdengar padahal sudah di halaman utama.
+        // Wrapper ini mengecek ulang tepat saat play() bg2 benar-benar berhasil: kalau ternyata
+        // saat itu kita SUDAH TIDAK di halaman pertandingan lagi, bg2 langsung dihentikan lagi.
+        (function() {
+            const _origBgMusic2Play = soundEffects.bgMusic2.play.bind(soundEffects.bgMusic2);
+            soundEffects.bgMusic2.play = function() {
+                const p = _origBgMusic2Play();
+                if (p && typeof p.then === 'function') {
+                    p.then(() => {
+                        const gc = document.getElementById('game-container');
+                        const inMatch = gc && gc.classList.contains('active');
+                        if (!inMatch) {
+                            soundEffects.bgMusic2.pause();
+                            soundEffects.bgMusic2.currentTime = 0;
+                        }
+                    }).catch(() => {});
+                }
+                return p;
+            };
+        })();
+
         Object.values(soundEffects).forEach(s => s.load());
 
         let audioUnlocked = false;

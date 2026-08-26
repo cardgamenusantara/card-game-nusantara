@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -9872,6 +9871,10 @@
                 'encyclopedia-screen',
                 'teman-screen',
                 'pengembang-screen',
+                // [FIX] Materi "Daerahku Kebanggaanku" (beserta tab Kuis di dalamnya) sebelumnya
+                // tidak ikut ditutup saat pertandingan dimulai, sehingga overlay materi masih
+                // nempel menutupi game-container yang sudah aktif.
+                'materi-screen',
             ];
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -9918,6 +9921,12 @@
             window._serverErrorRetryFn = null;
             const _rBtn = document.getElementById('server-error-retry-btn');
             if (_rBtn) _rBtn.textContent = 'Coba Lagi';
+            // [FIX] change-password-modal pakai classList 'active' (bukan style.display),
+            // jadi tidak tertutup otomatis lewat loop 'ids' di atas meski settings-screen
+            // (induknya) sudah ditutup — modal ini terpisah & full-screen (z-index:16000),
+            // sehingga bisa nyangkut menutupi game-container saat pertandingan dimulai.
+            const _cpModal = document.getElementById('change-password-modal');
+            if (_cpModal) _cpModal.classList.remove('active');
         }
 
         /**

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -500,6 +501,24 @@
             text-align: center; font-size: 1.3em; font-weight: bold;
             margin-bottom: 10px; padding: 8px;
             background: rgba(255,255,255,0.2); border-radius: 8px;
+        }
+        /* [FIX] Class terpisah KHUSUS teks "Menunggu ... Menjatuhkan Kartu Ke Arena..."
+           (isinya nama pemain/bot yang variatif panjangnya) — supaya class utama
+           .province-label (dipakai juga untuk nama provinsi normal yang sudah pasti
+           pendek) tidak ikut terdampak.
+           .province-label-waiting sendiri TIDAK nowrap — kalimat boleh wrap normal
+           kalau memang perlu, supaya "Menunggu" dan "Menjatuhkan Kartu Ke Arena..."
+           TIDAK PERNAH terpotong.
+           .waiting-name (di dalamnya) yang punya batas lebar sendiri + ellipsis —
+           HANYA bagian nama ini yang dipotong kalau ia sendiri melebihi lebarnya,
+           tanpa memotong sisa kalimat. */
+        .province-label-waiting { display: inline; }
+        .waiting-name {
+            display: inline-block; max-width: 45vw; vertical-align: bottom;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        @media (max-width: 480px) {
+            .waiting-name { max-width: 55vw; }
         }
         .province-label-map {
             height: 28px; width: auto; max-width: 56px;
@@ -1206,6 +1225,14 @@
         }
         .spec-prov-tab:hover{background:rgba(255,255,255,0.18);}
         .spec-prov-tab.active{background:rgba(251,191,36,0.22);border-color:#fbbf24;color:#fcd34d;}
+        /* [FIX] Indikator provinsi Arena (currentProvince) — terpisah dari .active (tab yang sedang dilihat) */
+        .spec-prov-tab.is-arena{box-shadow:0 0 0 2px #4caf50 inset;}
+        .spec-prov-tab .tab-arena-dot{
+            display:inline-block;width:7px;height:7px;border-radius:50%;
+            background:#4caf50;margin-right:5px;vertical-align:middle;
+            box-shadow:0 0 4px #4caf50;animation:arenaPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes arenaPulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
         .spec-prov-tab .tab-stock{
             display:inline-block;margin-left:5px;
             font-size:0.82em;font-weight:800;
@@ -6037,7 +6064,7 @@
     <!-- GAME OVER MODAL -->
     <div class="modal" id="game-over-modal" style="z-index:99995;">
         <div class="modal-content">
-            <h2>🏆 GAME OVER! 🏆</h2>
+            <h2>🏆 PERTANDINGAN SELESAI 🏆</h2>
             <div class="rankings" id="rankings"></div>
             <div id="game-over-home-btn-wrap" style="display:flex; gap:12px; margin-top:12px; justify-content:center; flex-wrap:wrap;">
                 <button class="btn-draw" onclick="playSound('button');goToHome()"
@@ -9524,6 +9551,22 @@
             return player.name;
         }
 
+        // [FIX] Label "Menunggu ..." di province-label saat currentProvince masih kosong
+        // (ronde baru mulai, belum ada yang menjatuhkan kartu pertama). Sebelumnya statis
+        // "Menunggu kartu..." — sekarang tampilkan nama pemain/bot yang sedang giliran
+        // Tahap 1 (phase1Player), konsisten dengan nama tersamar yang dipakai di tempat lain.
+        // Nama TIDAK dipotong manual di sini — dibiarkan utuh, lalu CSS .province-label
+        // (white-space:nowrap + text-overflow:ellipsis) yang menentukan apakah perlu
+        // dipotong, HANYA jika baris benar-benar melebihi lebar kotak sesungguhnya.
+        function _waitingArenaLabel(gs) {
+            if (!gs) return 'Menunggu kartu...';
+            const p1id = gs.phase1Player;
+            if (!p1id || p1id === 'system') return 'Menunggu kartu...';
+            const p1 = (gs.players || []).find(p => p.id === p1id);
+            if (!p1) return 'Menunggu kartu...';
+            return `<span class="province-label-waiting">Menunggu <span class="waiting-name">${escHtml(getBotDisplayName(p1))}</span> Menjatuhkan Kartu Ke Arena...</span>`;
+        }
+
         const DOM = {
             matchmakingScreen: document.getElementById('matchmaking-screen'),
             gameContainer:     document.getElementById('game-container'),
@@ -11311,7 +11354,7 @@
             const pl = document.getElementById('province-label');
             if (rn) rn.textContent = gs.round || 1;
             if (ph) ph.textContent = gs.phase || 1;
-            if (pl) pl.innerHTML = gs.currentProvince ? `<img src="${av(`gambar/provinsi/${gs.currentProvince}/peta (${gs.currentProvince}).png`)}" alt="Peta" class="province-label-map" onerror="this.style.display='none'"> ${gs.currentProvince}` : 'Menunggu kartu...';
+            if (pl) pl.innerHTML = gs.currentProvince ? `<img src="${av(`gambar/provinsi/${gs.currentProvince}/peta (${gs.currentProvince}).png`)}" alt="Peta" class="province-label-map" onerror="this.style.display='none'"> ${gs.currentProvince}` : _waitingArenaLabel(gs);
 
             // Draw/discard pile counts
             const dp2 = document.getElementById('draw-pile-count-2');
@@ -11801,7 +11844,7 @@
                 const cardId = `${provName}-${card.name}`;
                 let status, badge, badgeLabel, rowClass;
                 if (topIds.has(cardId)) {
-                    status = 'top';    badge = 'top';    badgeLabel = '🎯 Top Card';   rowClass = 's-top';
+                    status = 'top';    badge = 'top';    badgeLabel = '🎯 Arena';   rowClass = 's-top';
                 } else if (handMap[cardId]) {
                     status = 'hand';   badge = 'hand';   badgeLabel = `👤 ${handMap[cardId].join(', ')}`; rowClass = 's-hand';
                 } else if (drawIds.has(cardId)) {
@@ -11857,11 +11900,16 @@
             tabs.innerHTML = '';
             provNames.forEach(prov => {
                 const tab = document.createElement('div');
-                tab.className = 'spec-prov-tab' + (prov === _specActiveProvince ? ' active' : '');
+                // [FIX] is-arena = provinsi yang SEDANG berjalan di ronde saat ini (currentProvince),
+                // terpisah dari 'active' yang cuma menandai tab mana yang sedang dilihat spectator.
+                // Real-time: fungsi ini di-rebuild ulang tiap GAME_STATE_UPDATE selama modal terbuka.
+                const isArena = prov === gameState.currentProvince;
+                tab.className = 'spec-prov-tab' + (prov === _specActiveProvince ? ' active' : '') + (isArena ? ' is-arena' : '');
                 tab.dataset.prov = prov;
                 const stock = _getProvStock(prov);
                 const stockColor = stock === 0 ? 'style="opacity:0.5"' : '';
-                tab.innerHTML = `${escHtml(prov)}<span class="tab-stock" ${stockColor}>📦${stock}</span>`;
+                const arenaDot = isArena ? '<span class="tab-arena-dot" title="Sedang di Arena"></span>' : '';
+                tab.innerHTML = `${arenaDot}${escHtml(prov)}<span class="tab-stock" ${stockColor}>📦${stock}</span>`;
                 tab.onclick = () => {
                     _specActiveProvince = prov;
                     tabs.querySelectorAll('.spec-prov-tab').forEach(t => t.classList.toggle('active', t.dataset.prov === prov));
@@ -11872,28 +11920,36 @@
         }
 
         function showProvinceInfo() {
-            if (!gameState || !gameState.currentProvince) return;
-            const provinceData = provinces.find(p => p.name === gameState.currentProvince);
-            if (!provinceData) return;
+            if (!gameState) return;
 
-            const gridDiv = document.getElementById('province-cards-grid');
-            gridDiv.innerHTML = '';
-
-            // SPECTATOR: panel 12 tab provinsi + 10 kartu per provinsi dengan status realtime
+            // SPECTATOR: panel 12 tab provinsi + 10 kartu per provinsi dengan status realtime.
+            // [FIX] Cabang ini TIDAK boleh mensyaratkan currentProvince truthy — saat transisi
+            // ronde, currentProvince bisa kosong sesaat, tapi mode tab tidak butuh itu sama sekali
+            // (currentProvince cuma dipakai sbg default tab yang kebuka pertama kali).
+            // Sebelumnya early-return di baris pertama fungsi ini membuat klik tombol info
+            // terlihat tidak merespon persis saat pergantian ronde belum selesai.
             if (_isSpectator) {
+                const gridDiv = document.getElementById('province-cards-grid');
+                gridDiv.innerHTML = '';
                 document.getElementById('province-info-title').textContent = '🗺️ Info Kartu Provinsi';
-                // Set provinsi aktif default ke currentProvince jika belum dipilih
+                // Set provinsi aktif default ke currentProvince jika belum dipilih (fallback ke tab pertama kalau currentProvince kosong)
                 if (!_specActiveProvince || !_matchSelectedProvinces.includes(_specActiveProvince)) {
-                    _specActiveProvince = gameState.currentProvince;
+                    _specActiveProvince = gameState.currentProvince || _matchSelectedProvinces[0] || null;
                 }
                 _specBuildProvTabs(gridDiv);
-                _specRenderProvCards(_specActiveProvince);
+                if (_specActiveProvince) _specRenderProvCards(_specActiveProvince);
                 const modal = document.getElementById('province-info-modal');
                 modal.classList.add('active');
                 modal.classList.add('spectator-mode');
                 return;
             }
 
+            if (!gameState.currentProvince) return;
+            const provinceData = provinces.find(p => p.name === gameState.currentProvince);
+            if (!provinceData) return;
+
+            const gridDiv = document.getElementById('province-cards-grid');
+            gridDiv.innerHTML = '';
             document.getElementById('province-info-title').textContent = `📍 ${gameState.currentProvince}`;
 
             const player = gameState.players.find(p => p.id === myPlayerId);
@@ -13490,7 +13546,7 @@
 
             // Province label
             const provinceLabel = document.getElementById('province-label');
-            provinceLabel.innerHTML = gameState.currentProvince ? `<img src="${av(`gambar/provinsi/${gameState.currentProvince}/peta (${gameState.currentProvince}).png`)}" alt="Peta" class="province-label-map" onerror="this.style.display='none'"> ${gameState.currentProvince}` : 'Menunggu kartu...';
+            provinceLabel.innerHTML = gameState.currentProvince ? `<img src="${av(`gambar/provinsi/${gameState.currentProvince}/peta (${gameState.currentProvince}).png`)}" alt="Peta" class="province-label-map" onerror="this.style.display='none'"> ${gameState.currentProvince}` : _waitingArenaLabel(gameState);
 
             // Province info button
             const infoBtn = document.getElementById('province-info-btn');

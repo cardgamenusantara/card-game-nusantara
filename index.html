@@ -11320,7 +11320,17 @@
                         const prevHand = _prevHands[p.id] || [];
                         const newHandIds = new Set((p.hand || []).map(c => c.id));
                         const played = prevHand.find(c => !newHandIds.has(c.id));
-                        const cardName = played ? played.name : '';
+                        // [FIX INFO LEAK] Untuk kartu LAWAN, server sekarang sengaja menyamarkan
+                        // data tangan (nama/tipe/dsb disembunyikan) supaya tidak bisa diintip lewat
+                        // DevTools. Begitu kartu itu benar-benar DIMAINKAN, ia jadi data publik lewat
+                        // topCard (arena) — jadi kalau nama tidak ada di 'played' (karena disamarkan),
+                        // ambil dari kartu teratas arena sebagai fallback (itu memang kartu yang baru
+                        // saja dijatuhkan). Untuk tangan sendiri (tidak disamarkan), 'played.name'
+                        // tetap langsung tersedia seperti biasa, jadi fallback ini tidak berpengaruh.
+                        let cardName = played ? played.name : '';
+                        if (!cardName && newState.topCard && newState.topCard.length > 0) {
+                            cardName = newState.topCard[newState.topCard.length - 1].name || '';
+                        }
                         showNotification(`🎴 ${_shortName(p.name)} menjatuhkan kartu${cardName ? ' ' + cardName : ''}`);
                     }
                 });

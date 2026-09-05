@@ -11917,7 +11917,8 @@
             if (!cardList) { cardList = document.createElement('div'); cardList.className = 'spec-card-list'; gridDiv.appendChild(cardList); }
             cardList.innerHTML = '';
 
-            provData.cards.forEach(card => {
+            const sortedCards = [...provData.cards].sort((a, b) => (b.power || 0) - (a.power || 0));
+            sortedCards.forEach(card => {
                 const cardId = `${provName}-${card.name}`;
                 let status, badge, badgeLabel, rowClass;
                 if (topIds.has(cardId)) {

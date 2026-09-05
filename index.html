@@ -1,9 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="umHcvpiimPxduQLfFPLSQbhGQH_ORc1kWwjbrsrsM-g" />
     <title>Card Game Digital Nusantara - ONLINE MODE</title>
 
     <!-- Firebase Compat SDK (lebih mudah dipakai dengan vanilla JS) -->
@@ -18491,7 +18491,7 @@
                 const header = document.createElement('div');
                 header.className = 'enc-province-name';
                 const imgSrc = av(`gambar/provinsi/${prov.name}/peta (${prov.name}).png`);
-                header.innerHTML = `<img src="${imgSrc}" alt="Peta ${prov.name}" class="enc-province-img" onerror="this.style.display='none'">${prov.name}`;
+                header.innerHTML = `<img src="${imgSrc}" alt="Peta ${prov.name}" class="enc-province-img" onerror="this.style.display='none'">${prov.name} <span style="font-size:0.72em;opacity:0.55;font-weight:normal;margin-left:4px;">(${prov.cards.length} kartu)</span>`;
                 section.appendChild(header);
 
                 const cardsRow = document.createElement('div');

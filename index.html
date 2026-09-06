@@ -12906,11 +12906,11 @@
                         label = medals[p.rank - 1] || `🎖️ Peringkat ${p.rank}`;
                     }
                     // Tambahkan catatan "Custom Match" agar tidak membingungkan
-                    div.textContent = `${label} - ${getBotDisplayName(p)} (${p.hand ? p.hand.length : p.cardsLeft || 0} kartu tersisa)${isMe ? '  ← Kamu' : ''}`;
+                    div.textContent = `${label} - ${getBotDisplayName(p)} (${p.hand ? p.hand.length : p.cardsLeft || 0} kartu tersisa)`;
                 } else {
                     // [FIX] Pemain yang menekan tombol "Menyerah" ditandai tengkorak, bukan medali
                     const _rankIcon = p.surrendered ? '💀' : (medals[p.rank - 1] || '🎖️');
-                    div.textContent = `${_rankIcon} - ${getBotDisplayName(p)} (${p.hand ? p.hand.length : p.cardsLeft || 0} kartu tersisa)${isMe ? '  ← Kamu' : ''}`;
+                    div.textContent = `${_rankIcon} - ${getBotDisplayName(p)} (${p.hand ? p.hand.length : p.cardsLeft || 0} kartu tersisa)`;
                 }
                 rankings.appendChild(div);
             });
@@ -13074,8 +13074,7 @@
                 }
                 div.innerHTML = `${rankLabel} &mdash; <strong>${escHtml(getBotDisplayName(p))}</strong> `
                     + `👤 `
-                    + `<span style="font-weight:normal;color:#666">(${p.hand.length} kartu | ⚡${p.totalPower})</span>`
-                    + (isMe ? ' <span style="color:#e65100;font-weight:bold">← Kamu</span>' : '');
+                    + `<span style="font-weight:normal;color:#666">(${p.hand.length} kartu | ⚡${p.totalPower})</span>`;
                 resultRankDiv.appendChild(div);
             });
 

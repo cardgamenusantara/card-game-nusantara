@@ -1454,11 +1454,14 @@
                 box-sizing: border-box !important;
                 margin: 0 !important;
                 border-radius: 10px !important;
-                animation: mobileNotifIn 0.3s ease-out !important;
+                /* Kontainer sendiri tidak pernah "menghilang" (tidak ada slide/translate keluar).
+                   Animasi fade untuk pergantian kalimat & warna diatur lewat JS setiap kali update. */
             }
         }
         @keyframes mobileNotifIn { from{opacity:0;transform:translateY(-10px);} to{opacity:1;transform:translateY(0);} }
         @keyframes mobileNotifOut { from{opacity:1;transform:translateY(0);} to{opacity:0;transform:translateY(-10px);} }
+        /* Animasi khusus saat kalimat & warna berganti — kontainer TIDAK ikut bergerak/hilang, hanya isinya fade */
+        @keyframes mobileNotifUpdate { from{opacity:0.25;} to{opacity:1;} }
 
         @keyframes slideInRight { from{transform:translateX(400px);opacity:0;} to{transform:translateX(0);opacity:1;} }
         @keyframes slideOutRight { from{transform:translateX(0);opacity:1;} to{transform:translateX(400px);opacity:0;} }
@@ -11906,10 +11909,13 @@
             if (!_notifCurrent) { then && then(); return; }
             clearTimeout(_notifDismissTimer);
             if (_isMobileNotif()) {
-                _notifCurrent.style.animation = 'mobileNotifOut 0.3s ease-out';
-            } else {
-                _notifCurrent.style.animation = 'slideOutRight 0.3s ease-out';
+                // MODE MOBILE: elemen TIDAK pernah dihapus/animasi keluar.
+                // Hanya lanjut ke notifikasi berikutnya — teks & warnanya saja yang akan diganti.
+                _notifBusy = false;
+                then && then();
+                return;
             }
+            _notifCurrent.style.animation = 'slideOutRight 0.3s ease-out';
             setTimeout(() => {
                 if (_notifCurrent) { _notifCurrent.remove(); _notifCurrent = null; }
                 _notifBusy = false;
@@ -11920,7 +11926,6 @@
             if (_notifBusy || _notifQueue.length === 0) return;
             _notifBusy = true;
             const message = _notifQueue.shift();
-            const n = document.createElement('div');
             const bg = message.includes('DIBEBASKAN') || message.includes('MENANG') || message.includes('Tahap 1')
                 ? 'linear-gradient(135deg,#4caf50 0%,#2e7d32 100%)'
                 : message.includes('Mengambil')
@@ -11929,20 +11934,31 @@
 
             const mobileAnchor = document.getElementById('mobile-notif-anchor');
             if (_isMobileNotif() && mobileAnchor) {
-                // MODE MOBILE: tampil di bawah deck, bukan fixed
-                n.className = 'game-notification game-notification-mobile';
-                n.textContent = message;
-                n.style.cssText = `
+                // MODE MOBILE: tampil di bawah deck. Elemen TIDAK pernah dihapus/animasi
+                // masuk-keluar — kalau elemen sebelumnya masih ada, cukup update teks & warnanya saja.
+                let mn = _notifCurrent;
+                if (!mn || mn.parentElement !== mobileAnchor) {
+                    mn = document.createElement('div');
+                    mn.className = 'game-notification game-notification-mobile';
+                    mobileAnchor.innerHTML = '';
+                    mobileAnchor.appendChild(mn);
+                }
+                mn.textContent = message;
+                mn.style.cssText = `
                     background:${bg};
                     color:white; padding:10px 16px; border-radius:10px;
                     box-shadow:0 4px 15px rgba(0,0,0,0.3);
                     font-weight:bold; font-size:0.88em;
                     text-align:center;
                 `;
-                mobileAnchor.innerHTML = '';
-                mobileAnchor.appendChild(n);
+                // Fade khusus kalimat & warna (kontainer tetap diam, tidak slide/hilang)
+                mn.style.animation = 'none';
+                void mn.offsetWidth; // paksa reflow supaya animasi bisa retrigger
+                mn.style.animation = 'mobileNotifUpdate 0.25s ease';
+                _notifCurrent = mn;
             } else {
                 // MODE DESKTOP: fixed pojok kanan atas (tidak berubah)
+                const n = document.createElement('div');
                 n.className = 'game-notification';
                 n.textContent = message;
                 n.style.cssText = `
@@ -11954,13 +11970,17 @@
                     max-width:300px; font-size:0.9em;
                 `;
                 document.body.appendChild(n);
+                _notifCurrent = n;
             }
-            _notifCurrent = n;
 
-            // Setelah 1 detik: jika ada antrian, langsung ganti; jika tidak, tunggu hingga 2 detik
+            // Setelah 1 detik: jika ada antrian, langsung ganti; jika tidak:
+            //  - Desktop: tunggu hingga 2 detik lalu hilang (animasi keluar seperti biasa)
+            //  - Mobile: TIDAK pernah dihapus, elemen & teks terakhir tetap tampil di layar
             _notifDismissTimer = setTimeout(() => {
                 if (_notifQueue.length > 0) {
                     _dismissCurrent(_processNotifQueue);
+                } else if (_isMobileNotif()) {
+                    _notifBusy = false;
                 } else {
                     // Tidak ada antrian — tunggu maksimal 1 detik lagi (total 2 detik)
                     _notifDismissTimer = setTimeout(() => {

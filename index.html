@@ -1292,6 +1292,7 @@
         .spec-card-badge{
             font-size:0.72em;flex-shrink:0;padding:2px 8px;
             border-radius:8px;font-weight:700;white-space:nowrap;
+            max-width:120px;overflow:hidden;text-overflow:ellipsis;
         }
         .spec-card-badge.draw{background:rgba(52,211,153,0.25);color:#34d399;border:1px solid rgba(52,211,153,0.4);}
         .spec-card-badge.hand{background:rgba(96,165,250,0.25);color:#60a5fa;border:1px solid rgba(96,165,250,0.4);}
@@ -3603,7 +3604,10 @@
             background: rgba(251,191,36,0.08); cursor: default;
         }
         .custom-slot.bot-slot .custom-slot-num { background: rgba(251,191,36,0.2); color: #fbbf24; }
-        .custom-slot-name { font-size: 0.9em; color: rgba(255,255,255,0.85); flex: 1; }
+        .custom-slot-name {
+            font-size: 0.9em; color: rgba(255,255,255,0.85); flex: 1;
+            min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
         .custom-slot-empty-text { font-size: 0.82em; color: rgba(255,255,255,0.38); flex: 1; }
         .bot-section-title { font-size: 0.75em; color: rgba(251,191,36,0.7); margin: 6px 0 4px; letter-spacing: 0.5px; }
         .bot-add-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -3893,8 +3897,15 @@
             }
 
             /* Party slots wrap on very small screens */
-            .party-slots { flex-wrap: wrap; }
-            .party-slot { min-width: calc(50% - 8px); }
+            /* [FIX] Sebelumnya flex-wrap membuat urutan flex-item jadi:
+               slot1, divider(+), slot2, divider(+), slot3 (5 item, bukan 3),
+               sehingga wrap-nya berantakan (tiap slot jadi baris sendiri-sendiri,
+               melebar penuh, bukan grid 2 kolom yang rapi). Solusi: sembunyikan
+               divider di layar sempit dan pakai CSS grid 2 kolom untuk slot 2 & 3,
+               sementara slot 1 (pemain sendiri) tetap full-width di baris atas. */
+            .party-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+            .party-vs-divider { display: none; }
+            .party-slot:nth-child(1) { grid-column: 1 / -1; }
 
             .prov-chip { font-size: 0.7em; padding: 4px 6px; }
             .prov-chip-icon { width: 28px; height: 20px; }
@@ -12129,11 +12140,13 @@
             const sortedCards = [...provData.cards].sort((a, b) => (b.power || 0) - (a.power || 0));
             sortedCards.forEach(card => {
                 const cardId = `${provName}-${card.name}`;
-                let status, badge, badgeLabel, rowClass;
+                let status, badge, badgeLabel, rowClass, badgeTitle = '';
                 if (topIds.has(cardId)) {
                     status = 'top';    badge = 'top';    badgeLabel = '🎯 Arena';   rowClass = 's-top';
                 } else if (handMap[cardId]) {
-                    status = 'hand';   badge = 'hand';   badgeLabel = `👤 ${handMap[cardId].join(', ')}`; rowClass = 's-hand';
+                    const _handNames = handMap[cardId].join(', ');
+                    status = 'hand';   badge = 'hand';   badgeLabel = `👤 ${escHtml(_handNames)}`; rowClass = 's-hand';
+                    badgeTitle = ` title="${escHtml(_handNames)}"`; // nama lengkap tetap terlihat lewat tap-and-hold/hover kalau terpotong ellipsis
                 } else if (drawIds.has(cardId)) {
                     status = 'draw';   badge = 'draw';   badgeLabel = '📦 Tersisa';    rowClass = 's-draw';
                 } else {
@@ -12144,7 +12157,7 @@
                 row.className = `spec-card-row ${rowClass}`;
                 row.innerHTML = `<span class="spec-card-name">${rarityLogoHTML(card.rarity, 'rarity-logo-inline')} ${escHtml(card.name)}</span>` +
                                 `<span class="spec-card-power">⚡${card.power}</span>` +
-                                `<span class="spec-card-badge ${badge}">${badgeLabel}</span>`;
+                                `<span class="spec-card-badge ${badge}"${badgeTitle}>${badgeLabel}</span>`;
                 cardList.appendChild(row);
             });
         }
@@ -17409,7 +17422,7 @@
                     // Host adalah diri sendiri — pakai avatar lokal
                     hostSlot.innerHTML = `
                         ${_getAvatarWithFrameHtml(36)}
-                        <div class="custom-slot-name" style="flex:1;">${escHtml(hostName)}</div>
+                        <div class="custom-slot-name" style="flex:1;" title="${escHtml(hostName)}">${escHtml(hostName)}</div>
                         <div class="custom-slot-rank">
                             <img src="${av('gambar/rank/'+hRkTier+'.png')}" onerror="this.style.display='none'">
                             <span>${escHtml(trRankName(hostRkName))}</span>
@@ -17423,7 +17436,7 @@
                         <div id="${hAvatarId}" style="width:36px;height:36px;border-radius:6px;overflow:hidden;${hFStyle}display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f093fb,#f5576c);font-size:1em;font-weight:bold;color:white;flex-shrink:0;cursor:pointer;" onclick="playSound('button');visitPlayerProfile('${escHtml(_customHostUid)}')" title="Kunjungi profil ${hInit}">
                             <img src="${av('gambar/avatar/avatar'+hostAvNum+'.png')}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentElement.textContent='${hInit}'">
                         </div>
-                        <div class="custom-slot-name" style="flex:1;cursor:pointer;" onclick="playSound('button');visitPlayerProfile('${escHtml(_customHostUid)}')">${escHtml(hostName)}</div>
+                        <div class="custom-slot-name" style="flex:1;cursor:pointer;" title="Kunjungi profil ${escHtml(hostName)}" onclick="playSound('button');visitPlayerProfile('${escHtml(_customHostUid)}')">${escHtml(hostName)}</div>
                         <div id="${hRankId}" class="custom-slot-rank">
                             <img src="${av('gambar/rank/'+hRkTier+'.png')}" onerror="this.style.display='none'">
                             <span>${escHtml(trRankName(hostRkName))}</span>
@@ -17453,7 +17466,7 @@
                     slot.classList.add('self');
                     slot.innerHTML = `
                         ${_getAvatarWithFrameHtml(36)}
-                        <div class="custom-slot-name" style="flex:1;">${myName}</div>
+                        <div class="custom-slot-name" style="flex:1;" title="${escHtml(myName)}">${myName}</div>
                         <div class="custom-slot-rank">
                             <img src="${av('gambar/rank/'+getRankTier(_cachedRankName)+'.png')}" onerror="this.style.display='none'">
                             <span>${escHtml(trRankName(_cachedRankName || 'Bronze III'))}</span>
@@ -17464,7 +17477,7 @@
                     slot.classList.add('self');
                     slot.innerHTML = `
                         ${_getAvatarWithFrameHtml(36)}
-                        <div class="custom-slot-name" style="flex:1;">${myName}</div>
+                        <div class="custom-slot-name" style="flex:1;" title="${escHtml(myName)}">${myName}</div>
                         <div class="custom-slot-rank">
                             <img src="${av('gambar/rank/'+getRankTier(_cachedRankName)+'.png')}" onerror="this.style.display='none'">
                             <span>${escHtml(trRankName(_cachedRankName || 'Bronze III'))}</span>

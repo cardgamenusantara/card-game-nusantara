@@ -12138,6 +12138,16 @@
         // PROVINCE INFO MODAL
         // =============================================
         // ── SPECTATOR PROVINCE INFO HELPERS ──────────────────────────────────────
+        // [FIX mobile] Potong nama pemain/bot berdasarkan JUMLAH KARAKTER (bukan cuma CSS ellipsis
+        // yang berbasis lebar pixel) supaya hasilnya konsisten di semua HP: >5 karakter → "Xxxxx...".
+        // Nama lengkap tetap tersimpan di title="" (tap-and-hold/hover) & tidak dipotong di desktop.
+        function _specMobileTruncName(name) {
+            if (!name) return name;
+            const isMobile = window.innerWidth <= 480;
+            if (!isMobile) return name;
+            return name.length > 5 ? name.slice(0, 5) + '...' : name;
+        }
+
         function _specRenderProvCards(provName) {
             if (!gameState || !provName) return;
             const provData = provinces.find(p => p.name === provName);
@@ -12170,9 +12180,10 @@
                 if (topIds.has(cardId)) {
                     status = 'top';    badge = 'top';    badgeLabel = '🎯 Arena';   rowClass = 's-top';
                 } else if (handMap[cardId]) {
-                    const _handNames = handMap[cardId].join(', ');
+                    const _handNamesFull = handMap[cardId].join(', '); // nama lengkap, untuk title="" saja
+                    const _handNames = handMap[cardId].map(_specMobileTruncName).join(', '); // dipotong khusus mobile
                     status = 'hand';   badge = 'hand';   badgeLabel = `👤 ${escHtml(_handNames)}`; rowClass = 's-hand';
-                    badgeTitle = ` title="${escHtml(_handNames)}"`; // nama lengkap tetap terlihat lewat tap-and-hold/hover kalau terpotong ellipsis
+                    badgeTitle = ` title="${escHtml(_handNamesFull)}"`; // nama lengkap tetap terlihat lewat tap-and-hold/hover
                 } else if (drawIds.has(cardId)) {
                     status = 'draw';   badge = 'draw';   badgeLabel = '📦 Tersisa';    rowClass = 's-draw';
                 } else {
@@ -12187,6 +12198,8 @@
                 cardList.appendChild(row);
             });
         }
+
+
 
         function _specBuildProvTabs(gridDiv) {
             // Selalu gunakan provinsi match — TIDAK difilter berdasarkan stock, tab tidak hilang walau stock 0

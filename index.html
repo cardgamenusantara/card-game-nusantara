@@ -13301,18 +13301,28 @@
             // [CUSTOM MATCH] Hitung pemain "kalah" — hanya dari pemain BERTANDING (bukan penonton)
             // gameState.players dari server sudah tidak mengandung spectator (spectator disimpan terpisah)
             // Tapi sebagai filter ganda: pastikan kita TIDAK menghitung pemain dengan rank === 0 yang belum selesai
+            //
+            // [FIX BUG] SEBELUMNYA: saat total>=3 & baru sebagian yang selesai, kode pakai
+            // Math.max(...finishedRanks) sebagai _cmLoserRank — ini SALAH, karena itu cuma rank
+            // TERTINGGI DI ANTARA YANG SUDAH SELESAI SAJA, bukan rank akhir yang sesungguhnya.
+            // Akibatnya pemain yang baru selesai urutan ke-2 dari 4 pemain (rank 2) langsung
+            // dicap "💀 Kalah" padahal 2 pemain lain masih bertanding & belum tentu dia yang
+            // paling buncit.
+            //
+            // FIX: rank di server di-assign BERURUTAN sesuai urutan selesai (rank 1 = tercepat).
+            // Rank paling besar (=total pemain) SECARA MATEMATIS hanya bisa didapat pemain yang
+            // benar-benar terakhir selesai (karena semua rank 1..total-1 pasti sudah diambil
+            // pemain lain lebih dulu). Jadi cukup pakai `total` sebagai _cmLoserRank — otomatis
+            // tidak akan pernah salah label di tengah pertandingan, karena label "Kalah" baru
+            // muncul saat p.rank benar-benar sama dengan total (dan p.winner true, artinya dia
+            // memang sudah dipastikan jadi yang terakhir).
             let _cmLoserRank = -1;
             if (_isCustomRoom && gameState.players.length > 0) {
                 // Pemain bertanding = semua yang ada di gameState.players (spectator tidak pernah masuk sini)
                 const activePlayers = gameState.players; // penonton tidak ada di sini
                 const total = activePlayers.length;
-                const finishedRanks = activePlayers.filter(p => p.winner && p.rank > 0).map(p => p.rank);
-                if (total === 2) {
-                    _cmLoserRank = 2;
-                } else if (total >= 3) {
-                    // Saat game selesai: ambil rank tertinggi dari yang sudah menang
-                    // Saat masih berlangsung: gunakan total sebagai perkiraan rank kalah
-                    _cmLoserRank = finishedRanks.length > 0 ? Math.max(...finishedRanks) : total;
+                if (total >= 2) {
+                    _cmLoserRank = total;
                 }
             }
 

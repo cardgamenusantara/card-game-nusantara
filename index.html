@@ -1187,9 +1187,10 @@
         .province-info-content {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 30px; border-radius: 20px;
-            max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto;
+            max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; overflow-x: hidden;
             box-shadow: 0 10px 50px rgba(0,0,0,0.5);
             position: relative; animation: slideIn 0.4s;
+            box-sizing: border-box; /* [FIX mobile] tanpa ini, width:95vw + padding bikin lebar aktual > layar */
         }
         /* SPECTATOR: modal lebih besar */
         .province-info-modal.spectator-mode .province-info-content {
@@ -1197,6 +1198,12 @@
             width: 95vw;
             max-height: 92vh;
             padding: 28px 32px;
+            box-sizing: border-box; /* [FIX mobile] cegah overflow horizontal saat nama pemain/bot panjang */
+        }
+        @media (max-width: 480px) {
+            .province-info-modal.spectator-mode .province-info-content {
+                padding: 18px 14px; /* [FIX mobile] padding lebih kecil di layar sempit */
+            }
         }
         .province-info-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -1211,7 +1218,7 @@
             cursor: pointer; font-size: 1.5em; color: #fff; transition: all 0.3s;
         }
         .province-info-close:hover { background: rgba(255,255,255,0.4); transform: rotate(90deg); }
-        .province-cards-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; padding: 20px 10px 10px; }
+        .province-cards-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; padding: 20px 10px 10px; max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
         .province-info-card {
             width: 128px; height: 180px; background: white; border-radius: 10px;
             padding: 7px; box-shadow: 0 6px 12px rgba(0,0,0,0.4); cursor: pointer;
@@ -1251,7 +1258,7 @@
 
 
         /* SPECTATOR PROVINCE INFO */
-        .spec-prov-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 14px;}
+        .spec-prov-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 14px;max-width:100%;box-sizing:border-box;}
         .spec-prov-tab{
             padding:5px 13px;border-radius:20px;font-size:0.8em;font-weight:700;
             cursor:pointer;border:2px solid rgba(255,255,255,0.18);
@@ -1276,12 +1283,14 @@
             vertical-align:middle;
         }
         .spec-prov-tab.active .tab-stock{background:rgba(251,191,36,0.35);color:#fde68a;}
-        .spec-card-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:2px 0;}
+        .spec-card-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:2px 0;min-width:0;}
         .spec-card-row{
             display:flex;align-items:center;gap:6px;
             padding:7px 10px;border-radius:10px;
             background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.1);
-            font-size:0.82em;min-width:0;
+            font-size:0.82em;min-width:0;max-width:100%;
+            overflow:hidden; /* [FIX mobile] badge nama panjang tidak lagi jebol keluar row */
+            box-sizing:border-box;
         }
         .spec-card-row.s-draw{border-color:rgba(52,211,153,0.4);}
         .spec-card-row.s-hand{border-color:rgba(96,165,250,0.4);background:rgba(96,165,250,0.08);}
@@ -1290,9 +1299,18 @@
         .spec-card-name{flex:1;font-weight:700;color:#fff;font-size:0.9em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .spec-card-power{font-size:0.75em;color:rgba(255,255,255,0.55);flex-shrink:0;}
         .spec-card-badge{
-            font-size:0.72em;flex-shrink:0;padding:2px 8px;
+            font-size:0.72em;flex-shrink:1;flex-grow:0;min-width:0;padding:2px 8px;
             border-radius:8px;font-weight:700;white-space:nowrap;
             max-width:120px;overflow:hidden;text-overflow:ellipsis;
+            box-sizing:border-box;
+        }
+        /* [FIX mobile] kolom grid sempit di HP: batasi badge lebih kecil biar nama pemain/bot panjang
+           tidak mendesak row keluar dari kolom (grid-template-columns:1fr 1fr) */
+        @media (max-width: 480px) {
+            .spec-card-list{gap:6px;}
+            .spec-card-row{padding:6px 7px;gap:4px;font-size:0.76em;}
+            .spec-card-badge{max-width:64px;font-size:0.68em;padding:2px 5px;}
+            .spec-card-power{font-size:0.7em;}
         }
         .spec-card-badge.draw{background:rgba(52,211,153,0.25);color:#34d399;border:1px solid rgba(52,211,153,0.4);}
         .spec-card-badge.hand{background:rgba(96,165,250,0.25);color:#60a5fa;border:1px solid rgba(96,165,250,0.4);}
@@ -6611,6 +6629,8 @@
             document.getElementById('nickname-screen').style.display = 'none';
             document.getElementById('pre-loading-screen').style.display = 'none';
             document.getElementById('matchmaking-screen').classList.remove('active');
+            // [FIX] Pastikan province-info-modal (position:fixed, sibling dari game-container) ikut ditutup
+            (function(){ const m = document.getElementById('province-info-modal'); if (m) { m.classList.remove('active'); m.classList.remove('spectator-mode'); } })();
             document.getElementById('game-container').classList.remove('active');
             // [FIX] Bersihkan modal yang mungkin masih menempel di DOM setelah logout
             // agar background tidak hitam dan tombol login tidak terhalang
@@ -7914,6 +7934,8 @@
             if (loginEmail) loginEmail.value = '';
             if (loginPass)  loginPass.value  = '';
 
+            // [FIX] Pastikan province-info-modal (position:fixed, sibling dari game-container) ikut ditutup
+            (function(){ const m = document.getElementById('province-info-modal'); if (m) { m.classList.remove('active'); m.classList.remove('spectator-mode'); } })();
             document.getElementById('game-container').classList.remove('active');
             document.getElementById('pre-loading-screen').style.display = 'none';
             // showAuthScreen() akan dipanggil otomatis oleh onAuthStateChanged(null)
@@ -8376,6 +8398,8 @@
                     if (_ovErr) _ovErr.style.display = 'none';
                     // [FIX] Hapus class 'reconnecting' dari body
                     document.body.classList.remove('reconnecting');
+                    // [FIX] Pastikan province-info-modal (position:fixed, sibling dari game-container) ikut ditutup
+                    (function(){ const m = document.getElementById('province-info-modal'); if (m) { m.classList.remove('active'); m.classList.remove('spectator-mode'); } })();
                     document.getElementById('game-container').classList.remove('active');
                     showPreloadingScreen(false);
                     // [FIX] Panggil showHomeButtons SETELAH pre-loading-screen visible
@@ -8576,6 +8600,8 @@
                         const _ovSpErr = document.getElementById('reconnecting-overlay');
                         if (_ovSpErr) _ovSpErr.style.display = 'none';
                         document.body.classList.remove('reconnecting');
+                        // [FIX] Pastikan province-info-modal (position:fixed, sibling dari game-container) ikut ditutup
+                        (function(){ const m = document.getElementById('province-info-modal'); if (m) { m.classList.remove('active'); m.classList.remove('spectator-mode'); } })();
                         document.getElementById('game-container').classList.remove('active');
                         showPreloadingScreen(false);
                         setTimeout(() => {
@@ -13793,6 +13819,14 @@
             _setPresenceStatus('online');
             // [FIX v15] Bersihkan countdown rejoin jika masih berjalan
             if (window._rejoinCountdownTimer) { clearInterval(window._rejoinCountdownTimer); window._rejoinCountdownTimer = null; }
+            // [FIX] province-info-modal BUKAN anak dari game-container di DOM (sibling, position:fixed),
+            // jadi tidak otomatis ikut hilang saat game-container di-nonaktifkan. Kalau tidak ditutup
+            // manual di sini, modal ini akan tetap nampil menutupi halaman home setelah klik kembali.
+            const _provModalOnHome = document.getElementById('province-info-modal');
+            if (_provModalOnHome) {
+                _provModalOnHome.classList.remove('active');
+                _provModalOnHome.classList.remove('spectator-mode');
+            }
             // Sembunyikan layar game & matchmaking
             DOM.gameContainer.classList.remove('active');
             DOM.matchmakingScreen.classList.remove('active');

@@ -840,6 +840,27 @@
                 margin-top: 3px;
                 padding-top: 3px;
             }
+            /* Kartu di province-info-content disamakan ukurannya dengan kartu di player-deck (.card) */
+            .province-info-card {
+                width: 108px; height: 152px;
+                padding: 6px;
+                min-width: 108px; max-width: 108px;
+                min-height: 152px; max-height: 152px;
+            }
+            .province-info-card-image {
+                height: 56px;
+                font-size: 2em;
+                margin-bottom: 4px;
+            }
+            .province-info-card-name {
+                font-size: 0.75em;
+                line-height: 1.1;
+            }
+            .province-info-card-type {
+                font-size: 0.6em;
+                margin-top: 3px;
+                padding-top: 3px;
+            }
         }
 
         /* BUTTONS */
@@ -1460,8 +1481,10 @@
         }
         @keyframes mobileNotifIn { from{opacity:0;transform:translateY(-10px);} to{opacity:1;transform:translateY(0);} }
         @keyframes mobileNotifOut { from{opacity:1;transform:translateY(0);} to{opacity:0;transform:translateY(-10px);} }
-        /* Animasi khusus saat kalimat & warna berganti — kontainer TIDAK ikut bergerak/hilang, hanya isinya fade */
-        @keyframes mobileNotifUpdate { from{opacity:0.25;} to{opacity:1;} }
+        /* Khusus game-notification mobile: kontainer TIDAK pernah dihapus/geser.
+           Yang fade in/out (punya durasi tampil lalu menghilang) hanya kalimat & warnanya. */
+        @keyframes mobileNotifTextIn { from{opacity:0;} to{opacity:1;} }
+        @keyframes mobileNotifTextOut { from{opacity:1;} to{opacity:0;} }
 
         @keyframes slideInRight { from{transform:translateX(400px);opacity:0;} to{transform:translateX(0);opacity:1;} }
         @keyframes slideOutRight { from{transform:translateX(0);opacity:1;} to{transform:translateX(400px);opacity:0;} }
@@ -3792,6 +3815,14 @@
             }
             .card-image { height: 60px; }
             .card-name { font-size: 0.75em; }
+            /* Kartu di province-info-content disamakan ukurannya dengan kartu di player-deck (.card) */
+            .province-info-card {
+                width: 108px; height: 152px;
+                min-width: 108px; max-width: 108px;
+                min-height: 152px; max-height: 152px;
+            }
+            .province-info-card-image { height: 60px; }
+            .province-info-card-name { font-size: 0.75em; }
 
             /* Top card area — tinggi tetap di mobile agar tidak berubah saat kartu masuk/keluar */
             .top-card-area {
@@ -3843,6 +3874,15 @@
             .card-image { height: 52px; }
             .card-name { font-size: 0.68em; }
             .card-type { font-size: 0.58em; }
+            /* Kartu di province-info-content disamakan ukurannya dengan kartu di player-deck (.card) */
+            .province-info-card {
+                width: 96px; height: 136px;
+                min-width: 96px; max-width: 96px;
+                min-height: 136px; max-height: 136px;
+            }
+            .province-info-card-image { height: 52px; }
+            .province-info-card-name { font-size: 0.68em; }
+            .province-info-card-type { font-size: 0.58em; }
 
             .player-stat { padding: 3px 6px; font-size: 0.78em; }
 
@@ -6935,6 +6975,14 @@
         // isRejoinMode=true → tampilkan hint "Kembali ke pertandingan aktif"
         function showHomeButtons(isRejoinMode, skipPreloading) {
             window.showHomeButtons = showHomeButtons; // expose ke global
+
+            // [FIX STUCK NOTIFICATION/STICKER] showHomeButtons() adalah jalur KEDUA menuju
+            // matchmaking-screen (disconnect, rejoin gagal, error reconnect, dll) — terpisah
+            // dari goToHome(). Tanpa ini, notifikasi/sticker dari match sebelumnya masih bisa
+            // nyangkut kalau user keluar lewat jalur ini, bukan lewat tombol biasa.
+            if (typeof _forceClearGameNotifications === 'function') _forceClearGameNotifications();
+            if (typeof _forceClearStickers === 'function') _forceClearStickers();
+
             const infoEl = document.getElementById('pre-loading-info');
             const spinnerEl = document.getElementById('pre-loading-spinner');
             const subtitleEl = document.querySelector('.pre-loading-subtitle');
@@ -11909,10 +11957,13 @@
             if (!_notifCurrent) { then && then(); return; }
             clearTimeout(_notifDismissTimer);
             if (_isMobileNotif()) {
-                // MODE MOBILE: elemen TIDAK pernah dihapus/animasi keluar.
-                // Hanya lanjut ke notifikasi berikutnya — teks & warnanya saja yang akan diganti.
-                _notifBusy = false;
-                then && then();
+                // MODE MOBILE: elemen TIDAK dihapus dari DOM/tidak digeser.
+                // Yang "menghilang" (fade out, punya durasi) hanya kalimat & warnanya.
+                _notifCurrent.style.animation = 'mobileNotifTextOut 0.3s ease forwards';
+                setTimeout(() => {
+                    _notifBusy = false;
+                    then && then();
+                }, 300);
                 return;
             }
             _notifCurrent.style.animation = 'slideOutRight 0.3s ease-out';
@@ -11934,8 +11985,8 @@
 
             const mobileAnchor = document.getElementById('mobile-notif-anchor');
             if (_isMobileNotif() && mobileAnchor) {
-                // MODE MOBILE: tampil di bawah deck. Elemen TIDAK pernah dihapus/animasi
-                // masuk-keluar — kalau elemen sebelumnya masih ada, cukup update teks & warnanya saja.
+                // MODE MOBILE: tampil di bawah deck. Kontainer TIDAK pernah dihapus/digeser —
+                // hanya kalimat & warnanya yang fade in saat muncul dan fade out setelah durasi tampil habis.
                 let mn = _notifCurrent;
                 if (!mn || mn.parentElement !== mobileAnchor) {
                     mn = document.createElement('div');
@@ -11951,10 +12002,10 @@
                     font-weight:bold; font-size:0.88em;
                     text-align:center;
                 `;
-                // Fade khusus kalimat & warna (kontainer tetap diam, tidak slide/hilang)
+                // Fade-in kalimat & warna (kontainer tetap diam di tempatnya)
                 mn.style.animation = 'none';
                 void mn.offsetWidth; // paksa reflow supaya animasi bisa retrigger
-                mn.style.animation = 'mobileNotifUpdate 0.25s ease';
+                mn.style.animation = 'mobileNotifTextIn 0.25s ease';
                 _notifCurrent = mn;
             } else {
                 // MODE DESKTOP: fixed pojok kanan atas (tidak berubah)
@@ -11973,16 +12024,13 @@
                 _notifCurrent = n;
             }
 
-            // Setelah 1 detik: jika ada antrian, langsung ganti; jika tidak:
-            //  - Desktop: tunggu hingga 2 detik lalu hilang (animasi keluar seperti biasa)
-            //  - Mobile: TIDAK pernah dihapus, elemen & teks terakhir tetap tampil di layar
+            // Setelah 1 detik: jika ada antrian, langsung ganti (fade); jika tidak, tunggu hingga 2 detik
+            // lalu kalimat & warnanya fade-out (kontainer tetap ada, tidak dihapus/digeser).
             _notifDismissTimer = setTimeout(() => {
                 if (_notifQueue.length > 0) {
                     _dismissCurrent(_processNotifQueue);
-                } else if (_isMobileNotif()) {
-                    _notifBusy = false;
                 } else {
-                    // Tidak ada antrian — tunggu maksimal 1 detik lagi (total 2 detik)
+                    // Tidak ada antrian — tunggu maksimal 1 detik lagi (total 2 detik) lalu fade-out
                     _notifDismissTimer = setTimeout(() => {
                         _dismissCurrent(_processNotifQueue);
                     }, 1000);
@@ -12000,6 +12048,24 @@
             } else {
                 _processNotifQueue();
             }
+        }
+
+        // [FIX STUCK NOTIFICATION] Paksa bersihkan antrian & elemen notifikasi
+        // desktop (yang ditempel langsung ke <body>, lepas dari game-container/
+        // matchmaking-screen) supaya tidak "nyangkut" kelihatan saat kembali ke
+        // home tepat pas ada banyak notifikasi beruntun (menjatuhkan kartu, menang,
+        // dibebaskan, dst) di akhir match. Dipanggil dari goToHome().
+        function _forceClearGameNotifications() {
+            _notifQueue.length = 0;
+            clearTimeout(_notifDismissTimer);
+            _notifDismissTimer = null;
+            if (_notifCurrent) {
+                // Elemen mobile hidup di dalam mobile-notif-anchor (di dalam game-container),
+                // jadi aman dikosongkan isinya juga; elemen desktop langsung dihapus dari body.
+                if (_notifCurrent.parentElement) _notifCurrent.remove();
+                _notifCurrent = null;
+            }
+            _notifBusy = false;
         }
 
         // =============================================
@@ -12617,6 +12683,19 @@
             video.addEventListener('ended', advance);
             video.addEventListener('error', advance);
             setTimeout(advance, STICKER_DISPLAY_MAX_MS); // jaring pengaman durasi maksimum
+        }
+
+        // [FIX STUCK STICKER] Sama seperti _forceClearGameNotifications — sticker desktop
+        // (#sticker-anchor-desktop) juga ditempel langsung ke <body>, lepas dari
+        // game-container/matchmaking-screen, jadi bisa nyangkut kalau beberapa stiker
+        // dikirim beruntun tepat saat match berakhir. Dipanggil dari goToHome().
+        function _forceClearStickers() {
+            _stickerQueue.length = 0;
+            if (_stickerCurrentEl) {
+                _stickerCurrentEl.remove();
+                _stickerCurrentEl = null;
+            }
+            _stickerBusy = false;
         }
 
         // =============================================
@@ -13476,6 +13555,12 @@
             if (goToHomeInProgress) return; // guard double-click
             goToHomeInProgress = true;
             setTimeout(() => { goToHomeInProgress = false; }, 1000);
+
+            // [FIX STUCK NOTIFICATION/STICKER] Bersihkan sisa notifikasi & stiker dari
+            // match sebelumnya SEBELUM matchmaking-screen ditampilkan, supaya tidak
+            // ada elemen yang masih nempel di <body> ikut kelihatan di layar home.
+            _forceClearGameNotifications();
+            _forceClearStickers();
 
             // Cek apakah player menang mid-game (checkWin) tapi save belum dikonfirmasi.
             // Jika ya, perlu beri waktu lebih lama agar server selesai savePlayerStats()

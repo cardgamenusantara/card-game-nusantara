@@ -5911,8 +5911,6 @@
                 </div>
                 <!-- Anchor notifikasi game (mobile: muncul di bawah panel koneksi) -->
                 <div id="mobile-notif-anchor"></div>
-                <!-- Anchor kartu stiker (mobile: tepat di bawah game-notification) -->
-                <div id="sticker-anchor-mobile"></div>
             </div>
 
             <!-- PANEL KANAN -->
@@ -5983,6 +5981,10 @@
                             🏆 Hasil Pertandingan
                         </button>
                     </div>
+                    <!-- [FIX] Anchor kartu stiker dipindah ke sini (bawah player-area) khusus mobile,
+                         karena di sini ada ruang kosong. Sebelumnya berada di .left-column (atas layar,
+                         dekat panel koneksi/lawan) sehingga terlalu jauh dari fokus pemain saat main. -->
+                    <div id="sticker-anchor-mobile"></div>
                 </div>
             </div>
         </div>
@@ -6556,8 +6558,6 @@
             document.getElementById('pre-loading-screen').style.display = 'none';
             document.getElementById('matchmaking-screen').classList.remove('active');
             document.getElementById('game-container').classList.remove('active');
-            // [FIX] Tutup semua overlay in-game agar tidak nyangkut di layar login/home setelah logout
-            if (typeof closeAllInGameOverlays === 'function') closeAllInGameOverlays();
             // [FIX] Bersihkan modal yang mungkin masih menempel di DOM setelah logout
             // agar background tidak hitam dan tombol login tidak terhalang
             const _pwModal = document.getElementById('_pwchange-modal');
@@ -7853,7 +7853,6 @@
             if (loginPass)  loginPass.value  = '';
 
             document.getElementById('game-container').classList.remove('active');
-            if (typeof closeAllInGameOverlays === 'function') closeAllInGameOverlays();
             document.getElementById('pre-loading-screen').style.display = 'none';
             // showAuthScreen() akan dipanggil otomatis oleh onAuthStateChanged(null)
         }
@@ -8316,7 +8315,6 @@
                     // [FIX] Hapus class 'reconnecting' dari body
                     document.body.classList.remove('reconnecting');
                     document.getElementById('game-container').classList.remove('active');
-                    if (typeof closeAllInGameOverlays === 'function') closeAllInGameOverlays();
                     showPreloadingScreen(false);
                     // [FIX] Panggil showHomeButtons SETELAH pre-loading-screen visible
                     // agar tombol PLAY muncul di layar yang benar (bukan tertutup overlay)
@@ -8517,7 +8515,6 @@
                         if (_ovSpErr) _ovSpErr.style.display = 'none';
                         document.body.classList.remove('reconnecting');
                         document.getElementById('game-container').classList.remove('active');
-                        if (typeof closeAllInGameOverlays === 'function') closeAllInGameOverlays();
                         showPreloadingScreen(false);
                         setTimeout(() => {
                             showHomeButtons(false, true); // [FIX] skipPreloading=true
@@ -10111,35 +10108,6 @@
             // sehingga bisa nyangkut menutupi game-container saat pertandingan dimulai.
             const _cpModal = document.getElementById('change-password-modal');
             if (_cpModal) _cpModal.classList.remove('active');
-        }
-
-        // [FIX] Tutup semua popup/overlay yang HANYA relevan saat sedang di dalam game-container,
-        // supaya tidak nyangkut menutupi halaman lain (home/matchmaking) ketika game-container
-        // di-nonaktifkan lewat jalur apapun (klik "Kembali ke Home", logout, koneksi gagal/GAME_OVER
-        // paksa, error spectator, dll). Sebelumnya sebagian overlay ini hanya ditutup manual di
-        // fungsi goToHome() saja, sehingga di jalur keluar lain (mis. server_error/ GAME_OVER paksa)
-        // overlay seperti rank-info-overlay, sticker-popup-overlay, ach-popup-overlay, dan
-        // ingame-settings-panel bisa tetap terbuka menimpa layar berikutnya.
-        function closeAllInGameOverlays() {
-            // Modal yang pakai classList 'active'
-            ['surrender-choice-modal', 'match-result-modal', 'game-over-modal',
-             'draw-level-overlay', 'ach-popup-overlay', 'ach-slot-picker',
-             'sticker-popup-overlay', 'voting-popup-overlay', 'province-info-modal'
-            ].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.remove('active');
-            });
-            // Overlay yang pakai style.display
-            const _rankInfo = document.getElementById('rank-info-overlay');
-            if (_rankInfo) _rankInfo.style.display = 'none';
-            const _igs = document.getElementById('ingame-settings-panel');
-            if (_igs) _igs.style.display = 'none';
-            // Hentikan timer voting kalau masih jalan
-            if (typeof _votingState !== 'undefined' && _votingState.countdownTimer) {
-                clearInterval(_votingState.countdownTimer);
-                _votingState.countdownTimer = null;
-            }
-            if (typeof _votingState !== 'undefined') _votingState.active = false;
         }
 
         /**
@@ -13624,10 +13592,19 @@
                 window._bgMusic2FirstClickHandler = null;
             }
 
-            // Tutup semua overlay/modal in-game (draw-level, rank-info, ach-popup, sticker,
-            // voting, surrender/match-result/game-over modal, ingame-settings, province-info)
-            // supaya tidak nyangkut ke halaman berikutnya.
-            closeAllInGameOverlays();
+            // Tutup semua overlay/modal
+            // [FIX] draw-level-overlay ditambahkan agar tidak bocor ke match berikutnya
+            // jika popup ℹ️ masih terbuka saat user klik "Kembali ke Home"
+            ['surrender-choice-modal', 'match-result-modal', 'game-over-modal', 'draw-level-overlay'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('active');
+            });
+            // [FIX] Popup voting Tahap 1 juga harus ikut tertutup — sebelumnya tidak ada di daftar
+            // di atas, jadi kalau user klik "Kembali ke Home" tepat saat voting masih berlangsung,
+            // popup-nya nempel terus (karena position:fixed) sampai halaman utama.
+            document.getElementById('voting-popup-overlay')?.classList.remove('active');
+            if (_votingState.countdownTimer) { clearInterval(_votingState.countdownTimer); _votingState.countdownTimer = null; }
+            _votingState.active = false;
 
             // Hentikan bgMusic2 (musik game) jika masih berjalan
             try {

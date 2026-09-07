@@ -115,6 +115,13 @@
             overflow-y: auto !important;
             overflow-x: hidden !important;
         }
+        /* [FIX SCROLL GANDA] Saat draw-level-overlay aktif DI TENGAH game berjalan,
+           body harus tetap terkunci (tidak boleh ikut scroll di belakang modal),
+           meski aturan di atas memaksa overflow-y:auto lewat !important.
+           Selector ini lebih spesifik (2x :has) sehingga menang di cascade CSS. */
+        body:has(.game-container.active):has(#draw-level-overlay.active) {
+            overflow: hidden !important;
+        }
         /* [FIX BG RECONNECT] Saat overlay reconnect aktif, paksa body pakai gradient
            meski game-container tidak active (di-remove saat reconnect berlangsung).
            Ini mencegah bg1.png muncul di balik overlay "Menyambung Kembali". */
@@ -1878,10 +1885,7 @@
             flex-shrink: 0;
             background: rgba(255,255,255,0.1);
         }
-        .enc-cards-row { display: flex; flex-wrap: nowrap; gap: 14px; padding-left: 4px; padding-bottom: 10px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-        .enc-cards-row::-webkit-scrollbar { height: 8px; }
-        .enc-cards-row::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 8px; }
-        .enc-cards-row::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 8px; }
+        .enc-cards-row { display: flex; flex-wrap: nowrap; gap: 14px; padding-left: 4px; padding-bottom: 10px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
         .enc-card-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
         .enc-power-badge {
             font-size: 0.72em; background: rgba(255,255,255,0.2); color: #fff;
@@ -2203,11 +2207,29 @@
             padding: 6px 20px 0; line-height: 1.5;
         }
         /* DRAW LEVEL POPUP */
+        /* Scrollbar disembunyikan secara visual, tapi scroll (mouse/keyboard/touch) tetap berfungsi normal */
+        /* [GLOBAL] Sembunyikan SEMUA scrollbar bawaan browser di seluruh halaman.
+           Scroll tetap berfungsi normal (mouse wheel, drag, keyboard, touch) —
+           yang dihilangkan cuma garis/balok visualnya. */
+        * {
+            scrollbar-width: none; -ms-overflow-style: none;
+        }
+        *::-webkit-scrollbar {
+            display: none; width: 0; height: 0;
+        }
+        .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
         #draw-level-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.65); z-index: 99995;
-            align-items: center; justify-content: center;
+            align-items: flex-start; justify-content: center;
+            overflow-y: auto; overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+            padding: 40px 0;
+            scrollbar-width: none; -ms-overflow-style: none;
         }
+        #draw-level-overlay::-webkit-scrollbar { display: none; width: 0; height: 0; }
         #draw-level-overlay.active { display: flex; }
         .dl-modal {
             background: linear-gradient(160deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
@@ -2215,8 +2237,7 @@
             width: 500px; max-width: 94vw; padding: 0 0 18px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             animation: popIn .18s ease;
-            max-height: 90vh; overflow-y: auto; overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
+            margin: auto 0;
         }
         .dl-header { position: sticky; top: 0; z-index: 2; }
         @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -2900,10 +2921,39 @@
             color: rgba(255,255,255,0.4); font-weight: 800; font-size: 0.85em;
             flex-shrink: 0; align-self: center; letter-spacing: 1px;
         }
-        /* Friend picker inside popup */
+        /* [POPUP] party-friend-picker kini overlay terpisah, sama pola-nya seperti #custom-friend-picker:
+           fixed fullscreen + backdrop blur, kartu di tengah, tabindex agar bisa langsung discroll pakai keyboard. */
         #party-friend-picker {
-            background: rgba(0,0,0,0.2); border-radius: 14px;
-            padding: 12px; margin-bottom: 14px;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 39600;
+            display: none; justify-content: center; align-items: flex-start;
+            -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+            overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+            padding: 40px 20px; box-sizing: border-box; outline: none;
+        }
+        .party-friend-picker-card {
+            background: linear-gradient(160deg, #1a1040 0%, #0d1b2a 100%);
+            border: 1px solid rgba(168,85,247,0.4);
+            border-radius: 16px;
+            width: 100%; max-width: 720px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            display: flex; flex-direction: column;
+            margin: auto 0;
+        }
+        .party-friend-picker-header {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; padding: 16px 16px 4px 18px; flex-shrink: 0;
+        }
+        .party-friend-picker-header-title { font-size: 0.95em; font-weight: 700; color: #fff; }
+        .party-friend-picker-close {
+            background: rgba(255,255,255,0.08); border: none; border-radius: 8px;
+            color: rgba(255,255,255,0.6); width: 26px; height: 26px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9em; cursor: pointer; transition: background 0.15s, color 0.15s;
+        }
+        .party-friend-picker-close:hover { background: rgba(244,67,54,0.25); color: #fff; }
+        .party-friend-picker-body-inner {
+            padding: 6px 16px 18px 18px;
         }
         .party-picker-title {
             color: rgba(255,255,255,0.65); font-size: 0.78em;
@@ -2928,9 +2978,12 @@
             border-color: rgba(255,255,255,0.45);
             background: rgba(255,255,255,0.16);
         }
+        /* [GRID] Sama seperti .custom-friend-grid — auto-fill 1 kolom di HP, sampai 3 kolom
+           di layar lebar, dan scroll ditangani oleh overlay #party-friend-picker (bukan di sini). */
         .party-friend-list {
-            max-height: 190px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 5px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
         }
         .party-friend-item {
             display: flex; align-items: center; gap: 10px;
@@ -3392,13 +3445,19 @@
         }
         .ach-slot-empty-icon { font-size: 1em; opacity: 0.3; }
         /* Slot picker overlay */
+        /* [FIX SCROLL] Scroll dipindah ke level overlay (layar penuh) agar scrollbar nempel
+           di ujung layar, bukan di ujung kartu — sama seperti pola #custom-room-overlay /
+           #encyclopedia-screen. tabindex + outline:none supaya bisa langsung di-scroll
+           pakai keyboard (panah atas/bawah) begitu popup dibuka. */
         #ach-slot-picker {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8);
             z-index: 33000; /* [FIX] Dinaikkan di atas ach-popup-overlay (32000) */
-            align-items: center; justify-content: center;
+            align-items: flex-start; justify-content: center;
+            overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+            padding: 40px 20px; box-sizing: border-box; outline: none;
         }
         #ach-slot-picker.active { display: flex; }
         .ach-slot-picker-card {
@@ -3406,11 +3465,11 @@
             border: 2px solid rgba(255,210,0,0.4);
             border-radius: 20px;
             padding: 22px 20px 18px;
-            width: min(92vw, 380px);
-            max-height: 80vh;
+            width: min(94vw, 700px); /* [WIDEN] dulu min(92vw,380px) → dibuat lebih lebar agar list bisa jadi grid multi-kolom */
             display: flex; flex-direction: column;
             gap: 12px;
             box-shadow: 0 10px 60px rgba(0,0,0,0.8);
+            margin: auto 0; /* rata tengah vertikal saat pendek, rata atas saat konten panjang */
         }
         .ach-slot-picker-title {
             font-size: 1em;
@@ -3418,12 +3477,18 @@
             color: #ffd200;
             text-align: center;
         }
+        .ach-slot-picker-list-wrap {
+            /* Scroll kini ditangani oleh overlay #ach-slot-picker, bukan di sini */
+        }
         .ach-slot-picker-list {
-            display: flex;
-            flex-direction: column;
+            /* [GRID] Dulu flex-column (1 kolom memanjang ke bawah).
+               Sekarang grid auto-fill: otomatis jadi 1 kolom di layar sempit,
+               dan sampai 3 kolom di layar lebar — jumlah kolom menyesuaikan
+               sendiri walau jumlah pencapaian tiap pemain berbeda-beda. */
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
             gap: 8px;
-            overflow-y: auto;
-            max-height: 55vh;
+            align-items: stretch;
         }
         .ach-slot-picker-item {
             display: flex;
@@ -3438,8 +3503,9 @@
         }
         .ach-slot-picker-item:hover { background: rgba(255,210,0,0.1); border-color: rgba(255,210,0,0.4); }
         .ach-slot-picker-item.selected { background: rgba(255,210,0,0.15); border-color: #ffd200; }
-        .ach-slot-picker-item.none-opt { border-color: rgba(255,80,80,0.3); }
+        .ach-slot-picker-item.none-opt { border-color: rgba(255,80,80,0.3); grid-column: 1 / -1; }
         .ach-slot-picker-item.none-opt:hover { background: rgba(255,80,80,0.1); }
+        .ach-slot-picker-list .asp-empty-msg { grid-column: 1 / -1; }
         .asp-icon { font-size: 1.8em; flex-shrink: 0; }
         .asp-name { font-size: 0.9em; font-weight: bold; color: #fff; }
         .ach-slot-picker-close {
@@ -3455,15 +3521,19 @@
         #custom-room-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.72); z-index: 39000; /* [FIX] Dinaikkan ke 39000 agar selalu di atas achievement-screen (31000) dan semua overlay lain */
-            display: none; justify-content: center; align-items: center;
+            display: none; justify-content: center; align-items: flex-start;
             -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+            overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+            padding: 40px 0; box-sizing: border-box; outline: none;
+            scrollbar-width: none; -ms-overflow-style: none;
         }
+        #custom-room-overlay::-webkit-scrollbar { display: none; width: 0; height: 0; }
         .custom-room-card {
             background: linear-gradient(160deg, #1a1040 0%, #0d1b2a 100%);
             border: 1px solid rgba(168,85,247,0.4);
             border-radius: 20px; padding: 24px 20px; width: 94%; max-width: 420px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.7); max-height: 90vh; overflow-y: auto;
-            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            position: relative; margin: auto 0;
         }
         .custom-room-title { font-size: 1.2em; font-weight: 700; color: #e2b3ff; text-align: center; margin-bottom: 4px; }
         .custom-room-subtitle { font-size: 0.78em; color: rgba(255,255,255,0.45); text-align: center; margin-bottom: 18px; }
@@ -3537,17 +3607,63 @@
             white-space: nowrap; text-align: center;
             display: block; width: 100%;
         }
+        /* [POPUP] custom-friend-picker kini overlay terpisah dari custom-room-card */
+        /* [FIX SCROLL] Scroll dipindah ke level overlay (layar penuh) agar scrollbar nempel
+           di ujung layar, bukan di ujung kartu — sama seperti pola #custom-room-overlay /
+           #encyclopedia-screen. tabindex + outline:none supaya bisa langsung di-scroll
+           pakai keyboard (panah atas/bawah) begitu popup dibuka, tanpa perlu klik dulu. */
+        #custom-friend-picker {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 39600; /* di atas custom-room-overlay (39000) */
+            display: none; justify-content: center; align-items: flex-start;
+            -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+            overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+            padding: 40px 20px; box-sizing: border-box; outline: none;
+        }
         .custom-friend-picker {
-            background: rgba(0,0,0,0.3); border-radius: 12px;
-            padding: 10px; margin-bottom: 14px; max-height: 180px; overflow-y: auto;
+            background: linear-gradient(160deg, #1a1040 0%, #0d1b2a 100%);
+            border: 1px solid rgba(168,85,247,0.4);
+            border-radius: 16px;
+            width: 100%; max-width: 720px; /* [WIDEN] dulu 380px → dibuat lebih lebar agar daftar teman bisa jadi grid multi-kolom */
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            display: flex; flex-direction: column;
+            margin: auto 0; /* rata tengah vertikal saat pendek, rata atas (mengikuti padding) saat konten panjang */
+        }
+        .custom-friend-picker-header {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; padding: 16px 16px 4px 18px; flex-shrink: 0;
+        }
+        .custom-friend-picker-header .custom-friend-picker-title { margin-bottom: 0; }
+        .custom-friend-picker-close {
+            background: rgba(255,255,255,0.08); border: none; border-radius: 8px;
+            color: rgba(255,255,255,0.6); width: 26px; height: 26px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9em; cursor: pointer; transition: background 0.15s, color 0.15s;
+        }
+        .custom-friend-picker-close:hover { background: rgba(244,67,54,0.25); color: #fff; }
+        .custom-friend-picker-body {
+            /* Scroll kini ditangani oleh overlay #custom-friend-picker, bukan di sini */
+        }
+        .custom-friend-picker-body-inner {
+            padding: 6px 16px 18px 18px;
         }
         .custom-friend-picker-title { font-size: 0.78em; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+        /* [GRID] Wadah khusus daftar teman (dipisah dari bagian bot/pencarian di atasnya).
+           auto-fill: otomatis 1 kolom di HP, sampai 3 kolom di layar lebar — menyesuaikan
+           sendiri walau jumlah teman tiap pemain berbeda-beda. */
+        .custom-friend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
+        }
         .custom-friend-item {
             display: flex; align-items: center; gap: 10px;
             padding: 8px 10px; border-radius: 9px; cursor: pointer;
-            transition: background 0.15s;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03);
+            transition: background 0.15s, border-color 0.15s;
         }
-        .custom-friend-item:hover { background: rgba(168,85,247,0.2); }
+        .custom-friend-item:hover { background: rgba(168,85,247,0.2); border-color: rgba(168,85,247,0.4); }
         .custom-friend-dot { width: 8px; height: 8px; border-radius: 50%; background: #43e97b; flex-shrink: 0; }
         .custom-friend-name { font-size: 0.87em; color: rgba(255,255,255,0.88); flex: 1; }
         .custom-friend-btn {
@@ -4311,7 +4427,7 @@
     </div>
 
     <!-- ENCYCLOPEDIA SCREEN -->
-    <div id="encyclopedia-screen">
+    <div id="encyclopedia-screen" tabindex="-1" style="outline:none;">
         <div class="enc-header">
             <div class="enc-title">🧭 Ensiklopedia Nusantara</div>
             <button class="btn-enc-close" onclick="playSound('x');hideEncyclopedia()">✖ Tutup</button>
@@ -4883,7 +4999,7 @@
     </div>
 
     <!-- DRAW LEVEL INFO POPUP -->
-    <div id="draw-level-overlay" onclick="playSound('button');hideDrawLevelInfo()">
+    <div id="draw-level-overlay" tabindex="-1" style="outline:none;" onclick="playSound('button');hideDrawLevelInfo()">
         <div class="dl-modal" onclick="event.stopPropagation()">
             <div class="dl-header">
                 <div class="dl-title">🎰 Level Tambah Kartu</div>
@@ -4910,7 +5026,7 @@
     </div>
 
     <!-- MATERI SCREEN ("Daerahku Kebanggaanku" - IPAS Kelas V Bab 7) -->
-    <div id="materi-screen">
+    <div id="materi-screen" tabindex="-1" style="outline:none;">
         <div class="materi-header">
             <div class="materi-title-wrap">
                 <div class="materi-title">📚 Daerahku Kebanggaanku</div>
@@ -5272,7 +5388,7 @@
 
     <!-- TEMAN SCREEN -->
     <!-- ===== RANK INFO MODAL ===== -->
-    <div id="rank-info-overlay" onclick="playSound('button');hideRankInfo()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:30000;overflow-y:auto;padding:20px;box-sizing:border-box;">
+    <div id="rank-info-overlay" class="hide-scrollbar" tabindex="-1" onclick="playSound('button');hideRankInfo()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:30000;overflow-y:auto;padding:20px;box-sizing:border-box;outline:none;">
         <div class="rank-info-modal" onclick="event.stopPropagation()">
             <div class="rank-info-header">
                 <div class="rank-info-title">ℹ️ Sistem Peringkat</div>
@@ -5368,7 +5484,7 @@
     </div>
 
     <!-- ===== LEADERBOARD SCREEN ===== -->
-    <div id="leaderboard-screen">
+    <div id="leaderboard-screen" tabindex="-1" style="outline:none;">
         <div class="enc-header">
             <div class="enc-title">🏆 Papan Peringkat</div>
             <button class="btn-enc-close" onclick="playSound('x');hideLeaderboard()">✖ Tutup</button>
@@ -5379,7 +5495,7 @@
         </div>
     </div>
 
-    <div id="teman-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); z-index:15000; overflow-y:auto;">
+    <div id="teman-screen" tabindex="-1" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); z-index:15000; overflow-y:auto; outline:none;">
         <div class="enc-header">
             <div class="enc-title">👥 Teman</div>
             <button class="btn-enc-close" onclick="playSound('x');hideTemanScreen()">✖ Tutup</button>
@@ -5421,7 +5537,7 @@
             <button class="profile-tab" id="btn-tab-riwayat" onclick="playSound('button');switchProfileTab('riwayat')">📜 Riwayat</button>
         </div>
         <!-- Konten kanan -->
-        <div id="profile-content">
+        <div id="profile-content" tabindex="-1" style="outline:none;">
             <!-- Tab: Profil Pemain -->
             <div id="tab-profil" class="profile-panel active">
                 <div class="profile-panel-title">👤 Profil Pemain</div>
@@ -5542,7 +5658,7 @@
             <div class="ach-summary">Diraih: <span id="ach-unlocked-count">0</span> / <span id="ach-total-count">0</span></div>
             <button class="ach-header-close" onclick="playSound('x');hideAchievementScreen()">✕</button>
         </div>
-        <div class="ach-grid" id="ach-grid"></div>
+        <div class="ach-grid" id="ach-grid" tabindex="-1" style="outline:none;"></div>
     </div>
 
     <!-- POPUP DETAIL PENCAPAIAN -->
@@ -5558,10 +5674,12 @@
     </div>
 
     <!-- SLOT PICKER PENCAPAIAN DI PROFIL -->
-    <div id="ach-slot-picker" onclick="if(event.target===this){playSound('x');closeAchSlotPicker();}">
+    <div id="ach-slot-picker" tabindex="-1" onclick="if(event.target===this){playSound('x');closeAchSlotPicker();}">
         <div class="ach-slot-picker-card">
             <div class="ach-slot-picker-title">🏅 Pilih Pencapaian untuk Ditampilkan<br><span style="font-size:0.75em;font-weight:normal;color:rgba(255,255,255,0.5);">Hanya pencapaian yang sudah diklaim</span></div>
-            <div class="ach-slot-picker-list" id="ach-slot-picker-list"></div>
+            <div class="ach-slot-picker-list-wrap">
+                <div class="ach-slot-picker-list" id="ach-slot-picker-list"></div>
+            </div>
             <button class="ach-slot-picker-close" onclick="playSound('x');closeAchSlotPicker()">Tutup</button>
         </div>
     </div>
@@ -5579,7 +5697,7 @@
             <button class="visit-tab" id="btn-vtab-riwayat" onclick="playSound('button');switchVisitTab('riwayat')">📜 Riwayat</button>
         </div>
         <!-- Konten kanan -->
-        <div id="visit-profile-content">
+        <div id="visit-profile-content" tabindex="-1" style="outline:none;">
             <!-- Tab Profil -->
             <div id="vtab-profil" class="visit-panel active">
                 <div class="visit-panel-title">👤 Profil Pemain</div>
@@ -5681,7 +5799,7 @@
     <div id="view-profile-modal" style="display:none;"></div>
 
     <!-- SETTINGS SCREEN -->
-    <div id="settings-screen" style="display:none;">
+    <div id="settings-screen" tabindex="-1" style="display:none;outline:none;">
         <div class="settings-header">
             <span class="settings-title">⚙️ Pengaturan</span>
             <button class="btn-settings-close" onclick="playSound('x');hideSettingsScreen()">✖ Tutup</button>
@@ -5941,7 +6059,7 @@
 
     <!-- PROVINCE INFO MODAL -->
     <div class="province-info-modal" id="province-info-modal">
-        <div class="province-info-content">
+        <div class="province-info-content" id="province-info-content" tabindex="-1" style="outline:none;">
             <div class="province-info-header">
                 <h2 id="province-info-title">📍 Provinsi</h2>
                 <div class="province-info-close" id="province-info-close">✕</div>
@@ -5957,7 +6075,7 @@
 
     <!-- POPUP PEMILIH STIKER -->
     <div class="sticker-popup-overlay" id="sticker-popup-overlay">
-        <div class="sticker-popup-content">
+        <div class="sticker-popup-content" id="sticker-popup-content" tabindex="-1" style="outline:none;">
             <div class="sticker-popup-header">
                 <h3>😄 Pilih Stiker</h3>
                 <div class="sticker-popup-close" id="sticker-popup-close">✕</div>
@@ -6012,7 +6130,7 @@
         <div class="modal-content" style="max-width:480px;">
             <h2 style="font-size:1.3em; margin-bottom:3px;">📊 Hasil Pertandingan</h2>
             <p id="match-result-round" style="color:#888; font-size:0.8em; margin-bottom:8px;"></p>
-            <div id="match-result-rankings" class="rankings" style="text-align:left; max-height:180px; overflow-y:auto;"></div>
+            <div id="match-result-rankings" class="rankings" tabindex="-1" style="text-align:left; max-height:180px; overflow-y:auto; outline:none;"></div>
             <div id="match-result-stats"
                 style="margin-top:6px; padding:6px 10px; background:#f0f4ff;
                        border-radius:8px; font-size:0.78em; color:#555; text-align:left;"></div>
@@ -6067,7 +6185,7 @@
 
     <!-- GAME OVER MODAL -->
     <div class="modal" id="game-over-modal" style="z-index:99995;">
-        <div class="modal-content">
+        <div class="modal-content" id="game-over-modal-content" tabindex="-1" style="outline:none;">
             <h2>🏆 PERTANDINGAN SELESAI 🏆</h2>
             <div class="rankings" id="rankings"></div>
             <div id="game-over-home-btn-wrap" style="display:flex; gap:12px; margin-top:12px; justify-content:center; flex-wrap:wrap;">
@@ -6080,7 +6198,7 @@
     </div>
 
     <!-- PENGEMBANG SCREEN -->
-    <div id="pengembang-screen" style="display:none;">
+    <div id="pengembang-screen" tabindex="-1" style="display:none;outline:none;">
         <div class="pengembang-header">
             <span class="pengembang-title">👨‍💻 Pengembang</span>
             <button class="btn-pengembang-close" onclick="playSound('x');hidePengembangScreen()">✖ Tutup</button>
@@ -12020,6 +12138,7 @@
                 const modal = document.getElementById('province-info-modal');
                 modal.classList.add('active');
                 modal.classList.add('spectator-mode');
+                document.getElementById('province-info-content').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
                 return;
             }
 
@@ -12057,6 +12176,7 @@
             });
 
             document.getElementById('province-info-modal').classList.add('active');
+            document.getElementById('province-info-content').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
         }
 
         function closeProvinceInfo() {
@@ -12371,6 +12491,7 @@
             playSound('button');
             _buildStickerPopup();
             document.getElementById('sticker-popup-overlay').classList.add('active');
+            document.getElementById('sticker-popup-content').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
         }
 
         function closeStickerPopup() {
@@ -12925,6 +13046,7 @@
             }
 
             modal.classList.add('active');
+            document.getElementById('game-over-modal-content').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
 
             // Hide spectator banner when game ends
             const spBanner = document.getElementById('spectator-banner');
@@ -13094,6 +13216,7 @@
             `;
 
             document.getElementById('match-result-modal').classList.add('active');
+            document.getElementById('match-result-rankings').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
 
             // Tampilkan tombol "Lanjut Menonton" jika pertandingan masih berlangsung
             // (spectator atau pemain yang sudah kalah ingin tetap menonton)
@@ -14101,6 +14224,7 @@
         // ============================================================
         function showEncyclopedia() {
             document.getElementById('encyclopedia-screen').style.display = 'block';
+            document.getElementById('encyclopedia-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
             document.body.style.overflow = 'hidden';
             renderEncFilter();
             renderEncCards('Semua');
@@ -14117,6 +14241,7 @@
 
         function showMateriScreen() {
             document.getElementById('materi-screen').style.display = 'block';
+            document.getElementById('materi-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
             document.body.style.overflow = 'hidden';
         }
 
@@ -14130,6 +14255,10 @@
                 document.getElementById(`materi-tab-btn-${t}`).classList.toggle('active', t === tab);
                 document.getElementById(`materi-tab-${t}`).classList.toggle('active', t === tab);
             });
+            // [FIX] Klik tombol tab memindahkan fokus browser ke tombol itu sendiri,
+            // sehingga panah atas/bawah berhenti scroll konten sampai area layar diklik ulang.
+            // Kembalikan fokus ke layar materi agar keyboard langsung bisa scroll lagi.
+            document.getElementById('materi-screen').focus({ preventScroll: true });
         }
 
         // ─── EMOJI → GAMBAR (tab Materi A/B/C) ──────────────────────────────
@@ -14308,6 +14437,7 @@
             document.body.style.overflow = 'hidden';
             attachProfileListeners(); // pasang real-time listeners
             switchProfileTab('profil');
+            document.getElementById('profile-content').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
         }
 
         function hideProfileScreen() {
@@ -14318,6 +14448,7 @@
 
         function showTemanScreen() {
             document.getElementById('teman-screen').style.display = 'block';
+            document.getElementById('teman-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
             document.body.style.overflow = 'hidden';
             loadFriendsTab();
         }
@@ -14337,6 +14468,10 @@
             if (tab === 'profil')         loadProfileData();
             else if (tab === 'statistik') loadProfileStats();
             // riwayat: data sudah dihandle oleh real-time listener di attachProfileListeners()
+            // [FIX] Klik tombol tab memindahkan fokus browser ke tombol itu sendiri,
+            // sehingga panah atas/bawah berhenti scroll konten sampai area konten diklik ulang.
+            // Kembalikan fokus ke area konten agar keyboard langsung bisa scroll lagi.
+            document.getElementById('profile-content').focus({ preventScroll: true });
         }
 
         function loadProfileData() {
@@ -14614,6 +14749,7 @@
                     btnLogout.title = '';
                 }
             }
+            document.getElementById('settings-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
         }
 
         function hideSettingsScreen() {
@@ -14623,6 +14759,7 @@
 
         function showPengembangScreen() {
             document.getElementById('pengembang-screen').style.display = 'flex';
+            document.getElementById('pengembang-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
             document.body.style.overflow = 'hidden';
         }
 
@@ -15173,6 +15310,7 @@
             document.body.style.overflow = 'hidden';
             attachVisitListeners(uid);
             switchVisitTab('profil');
+            document.getElementById('visit-profile-content').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
         }
 
         function closeVisitProfile() {
@@ -15190,6 +15328,9 @@
             // Data diperbarui real-time oleh attachVisitListeners
             // Hanya loadVisitProfil dipanggil sekali untuk info statis (nickname, join date, tombol teman)
             if (tab === 'profil') loadVisitProfil();
+            // [FIX] Sama seperti switchProfileTab: kembalikan fokus ke area konten
+            // agar panah atas/bawah keyboard langsung bisa scroll tanpa klik ulang.
+            document.getElementById('visit-profile-content').focus({ preventScroll: true });
         }
 
         function attachVisitListeners(uid) {
@@ -15512,6 +15653,7 @@
         function showRankInfo() {
             const el = document.getElementById('rank-info-overlay');
             el.style.display = 'block';
+            el.focus({ preventScroll: true });
         }
         function hideRankInfo() {
             const el = document.getElementById('rank-info-overlay');
@@ -15563,6 +15705,7 @@
             // atau player pertama apapun agar popup tetap bisa tampil
             const resolvedId = targetId || (gameState.players[0] && gameState.players[0].id);
             if (!resolvedId) return;
+            document.body.style.overflow = 'hidden';
             const player = gameState.players.find(p => p.id === resolvedId);
             const level  = (player && player.drawLevel) || 1;
             const count  = (player && player.drawCount) || 0;
@@ -15640,7 +15783,9 @@
                     });
                 }
 
-                document.getElementById('draw-level-overlay').classList.add('active');
+                const _dlOverlay = document.getElementById('draw-level-overlay');
+                _dlOverlay.classList.add('active');
+                _dlOverlay.focus({ preventScroll: true });
 
                 // Render stok per provinsi di drawPile
                 const provStockEl = document.getElementById('dl-province-stock');
@@ -15665,12 +15810,13 @@
                 console.error('[showDrawLevelInfo] Error saat render popup:', e);
                 // Tetap tampilkan overlay meskipun render parsial gagal
                 const overlay = document.getElementById('draw-level-overlay');
-                if (overlay) overlay.classList.add('active');
+                if (overlay) { overlay.classList.add('active'); overlay.focus({ preventScroll: true }); }
             }
         }
 
         function hideDrawLevelInfo() {
             document.getElementById('draw-level-overlay').classList.remove('active');
+            restoreBodyOverflow();
         }
 
         // =============================================
@@ -15678,6 +15824,7 @@
         // =============================================
         function showLeaderboard() {
             document.getElementById('leaderboard-screen').style.display = 'block';
+            document.getElementById('leaderboard-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
             loadLeaderboard();
         }
         function hideLeaderboard() {
@@ -16027,16 +16174,23 @@
             const picker = document.getElementById('party-friend-picker');
             if (picker.style.display === 'none' || _openPickerSlot !== slotNum) {
                 _openPickerSlot = slotNum;
-                picker.style.display = 'block';
+                picker.style.display = 'flex';
+                picker.focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll popup ini
                 // Reset kolom pencarian saat picker dibuka / ganti slot
                 const srch = document.getElementById('party-friend-search');
                 if (srch) srch.value = '';
                 _loadPartyFriendList();
             } else {
-                _stopPartyPresenceListener();
-                picker.style.display = 'none';
-                _openPickerSlot = null;
+                closePartyFriendPicker();
             }
+        }
+
+        // Tutup popup party-friend-picker (tombol ✖ / klik area luar)
+        function closePartyFriendPicker() {
+            _stopPartyPresenceListener();
+            const picker = document.getElementById('party-friend-picker');
+            if (picker) picker.style.display = 'none';
+            _openPickerSlot = null;
         }
 
         async function _loadPartyFriendList() {
@@ -16097,7 +16251,7 @@
                         );
                     });
                     if (!sorted.length) {
-                        el.innerHTML = '<div style="color:rgba(255,255,255,0.5);font-size:0.85em;">Belum ada teman.</div>';
+                        el.innerHTML = '<div style="grid-column:1/-1;color:rgba(255,255,255,0.5);font-size:0.85em;">Belum ada teman.</div>';
                         return;
                     }
                     el.innerHTML = sorted.map(f => {
@@ -16175,7 +16329,7 @@
                 if (!noResult) {
                     const el2 = document.createElement('div');
                     el2.id = 'party-search-no-result';
-                    el2.style.cssText = 'color:rgba(255,255,255,0.4);font-size:0.82em;padding:6px 4px;';
+                    el2.style.cssText = 'grid-column:1/-1;color:rgba(255,255,255,0.4);font-size:0.82em;padding:6px 4px;';
                     el2.textContent = '🔍 Tidak ada teman dengan nama tersebut.';
                     document.getElementById('party-friend-list').appendChild(el2);
                 }
@@ -17293,7 +17447,8 @@
         async function openCustomFriendPicker(slotPos) {
             _customPickerSlot = slotPos; // slot position 1-4
             const picker = document.getElementById('custom-friend-picker');
-            picker.style.display = 'block';
+            picker.style.display = 'flex';
+            picker.focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll popup ini
             const listDiv = document.getElementById('custom-friend-list');
 
             // ── Bagian pilih Bot ──────────────────────────────
@@ -17370,6 +17525,16 @@
                 const profiles = uids.map(uid => ({ uid, ..._cflCache[uid] }));
                 if (friendsSection) friendsSection.remove();
 
+                // [GRID] Wadah grid khusus daftar teman, dipisah dari bagian bot/pencarian
+                // di atasnya (yang tetap 1 kolom penuh). Dibuat sekali saja per-buka popup.
+                let friendGrid = listDiv.querySelector('#custom-friend-grid');
+                if (!friendGrid) {
+                    friendGrid = document.createElement('div');
+                    friendGrid.id = 'custom-friend-grid';
+                    friendGrid.className = 'custom-friend-grid';
+                    listDiv.appendChild(friendGrid);
+                }
+
                 // Fungsi render — semua data sudah tersedia, langsung inject ke HTML
                 function renderCustomWithPresence(presence) {
                     const invitedUids = Object.values(_customRoomSlots).filter(s => s && !s.isBot).map(s => s.uid);
@@ -17382,11 +17547,10 @@
                             _friendSortKey(bInfo, b.rkName, b.expVal, invitedUids.includes(b.uid))
                         );
                     });
-                    // Hapus semua item teman lama (setelah bot section)
-                    const existing = listDiv.querySelectorAll('.custom-friend-item');
-                    existing.forEach(el => el.remove());
+                    // Hapus semua item teman lama (di dalam grid)
+                    friendGrid.innerHTML = '';
                     if (!sorted.length) {
-                        listDiv.insertAdjacentHTML('beforeend', '<div style="color:rgba(255,255,255,0.4);font-size:0.82em;padding:4px 0;">Belum ada teman.</div>');
+                        friendGrid.insertAdjacentHTML('beforeend', '<div style="grid-column:1/-1;color:rgba(255,255,255,0.4);font-size:0.82em;padding:4px 0;">Belum ada teman.</div>');
                         return;
                     }
                     for (const f of sorted) {
@@ -17427,7 +17591,7 @@
                                 ${rkBadgeHtml}
                             </div>
                             ${canInvite ? `<button class="custom-friend-btn" onclick="playSound('button');inviteToCustomRoom('${escHtml(f.uid)}','${escHtml(f.nickname).replace(/'/g,"\\'")}',${slotPos})">Undang</button>` : ''}`;
-                        listDiv.appendChild(item);
+                        friendGrid.appendChild(item);
                     }
                 }
 
@@ -17451,6 +17615,14 @@
                 _customPresenceRef.off('value', _customPresenceCb);
                 _customPresenceRef = null; _customPresenceCb = null;
             }
+        }
+
+        // Tutup popup custom-friend-picker (tombol ✖ / klik area luar / Esc)
+        function closeCustomFriendPicker() {
+            _stopCustomPresenceListener();
+            const picker = document.getElementById('custom-friend-picker');
+            if (picker) picker.style.display = 'none';
+            _customPickerSlot = null;
         }
 
         // Filter list custom friend picker — dipanggil oninput dan setelah setiap render presence
@@ -17834,6 +18006,10 @@
             document.getElementById('enc-tab-cards').classList.toggle('active', tab === 'cards');
             document.getElementById('enc-tab-rules').classList.toggle('active', tab === 'rules');
             document.getElementById('enc-tab-buttons').classList.toggle('active', tab === 'buttons');
+            // [FIX] Klik tombol tab memindahkan fokus browser ke tombol itu sendiri,
+            // sehingga panah atas/bawah berhenti scroll konten sampai area layar diklik ulang.
+            // Kembalikan fokus ke layar ensiklopedia agar keyboard langsung bisa scroll lagi.
+            document.getElementById('encyclopedia-screen').focus({ preventScroll: true });
         }
 
         let _encDropdownClickHandler = null; // referensi handler global untuk tutup dropdown
@@ -17866,6 +18042,10 @@
                 renderEncCards(name);
                 list.classList.remove('open');
                 mainBtn.classList.remove('open');
+                // [FIX] Tombol dropdown mencuri fokus browser saat diklik, sehingga panah
+                // atas/bawah berhenti scroll konten sampai layar diklik ulang. Kembalikan
+                // fokus ke layar ensiklopedia agar keyboard langsung bisa scroll lagi.
+                document.getElementById('encyclopedia-screen').focus({ preventScroll: true });
             }
 
             // Item "Semua Provinsi"
@@ -18481,6 +18661,29 @@
             document.body.appendChild(modal);
         }
 
+        // === Dukungan scroll .enc-cards-row pakai tombol panah kiri/kanan saat kursor hover ===
+        let _encRowHovered = null;
+        document.addEventListener('mouseover', (e) => {
+            const row = e.target.closest && e.target.closest('.enc-cards-row');
+            if (row) _encRowHovered = row;
+        });
+        document.addEventListener('mouseout', (e) => {
+            const row = e.target.closest && e.target.closest('.enc-cards-row');
+            if (row && (!e.relatedTarget || !e.relatedTarget.closest || !e.relatedTarget.closest('.enc-cards-row'))) {
+                _encRowHovered = null;
+            }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (!_encRowHovered) return;
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                _encRowHovered.scrollBy({ left: -200, behavior: 'smooth' });
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                _encRowHovered.scrollBy({ left: 200, behavior: 'smooth' });
+            }
+        });
+
         function renderEncCards(filter) {
             const container = document.getElementById('enc-cards-container');
             if (!container) return;
@@ -18586,8 +18789,21 @@
                 </div>
             </div>
 
-            <!-- Friend Picker (tersembunyi sampai slot diklik) -->
-            <div id="party-friend-picker" style="display:none;">
+            <div class="party-lobby-actions">
+                <button class="party-btn-cancel" onclick="playSound('x');closePartyLobby()">✖ Batal</button>
+                <button class="party-btn-start" onclick="playSound('button');startMatchmakingFromParty()">▶ Mulai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PARTY: FRIEND PICKER (popup terpisah, di atas party-lobby-overlay — pola sama seperti custom-friend-picker) -->
+    <div id="party-friend-picker" class="hide-scrollbar" style="display:none;" tabindex="-1" onclick="if(event.target===this){playSound('x');closePartyFriendPicker();}">
+        <div class="party-friend-picker-card">
+            <div class="party-friend-picker-header">
+                <div class="party-friend-picker-header-title">Pilih teman online:</div>
+                <button class="party-friend-picker-close" onclick="playSound('x');closePartyFriendPicker()" title="Tutup">✖</button>
+            </div>
+            <div class="party-friend-picker-body-inner">
                 <div class="picker-search-row">
                     <div class="party-picker-title">Pilih Teman</div>
                     <input
@@ -18603,11 +18819,6 @@
                 <div class="party-friend-list" id="party-friend-list">
                     <div style="color:rgba(255,255,255,0.5);font-size:0.85em;padding:6px 0;">⏳ Memuat...</div>
                 </div>
-            </div>
-
-            <div class="party-lobby-actions">
-                <button class="party-btn-cancel" onclick="playSound('x');closePartyLobby()">✖ Batal</button>
-                <button class="party-btn-start" onclick="playSound('button');startMatchmakingFromParty()">▶ Mulai</button>
             </div>
         </div>
     </div>
@@ -18648,7 +18859,7 @@
     </div>
 
     <!-- KOSTUM: CUSTOM ROOM LOBBY -->
-    <div id="custom-room-overlay" style="display:none;">
+    <div id="custom-room-overlay" tabindex="-1" style="display:none;">
         <div class="custom-room-card">
             <button class="lobby-minimize-btn" onclick="playSound('button');minimizeCustomRoom()" title="Perkecil">—</button>
             <div class="custom-room-title" id="custom-room-title">⚔️ Lobi Tantang</div>
@@ -18657,15 +18868,24 @@
             <div class="custom-slots" id="custom-slots">
                 <!-- Slots filled by JS -->
             </div>
-            <div id="custom-friend-picker" style="display:none;">
-                <div class="custom-friend-picker">
-                    <div class="custom-friend-picker-title">Pilih teman online:</div>
-                    <div id="custom-friend-list"></div>
-                </div>
-            </div>
             <div class="custom-room-actions">
                 <button class="btn-custom-cancel" onclick="playSound('x');leaveCustomRoom()">✖ Keluar</button>
                 <button class="btn-custom-start" id="btn-custom-start" onclick="playSound('button');startCustomRoomGame()">▶ Mulai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KOSTUM: CUSTOM FRIEND PICKER (popup terpisah, di atas custom-room-card) -->
+    <div id="custom-friend-picker" class="hide-scrollbar" style="display:none;" tabindex="-1" onclick="if(event.target===this){playSound('x');closeCustomFriendPicker();}">
+        <div class="custom-friend-picker">
+            <div class="custom-friend-picker-header">
+                <div class="custom-friend-picker-title">Pilih teman online:</div>
+                <button class="custom-friend-picker-close" onclick="playSound('x');closeCustomFriendPicker()" title="Tutup">✖</button>
+            </div>
+            <div class="custom-friend-picker-body">
+                <div class="custom-friend-picker-body-inner">
+                    <div id="custom-friend-list"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -19470,6 +19690,7 @@ async function showAchievementScreen() {
     scr.classList.add('active');
     await _loadAchData();
     await _renderAchGrid();
+    document.getElementById('ach-grid').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
 }
 
 function hideAchievementScreen() {
@@ -19629,6 +19850,7 @@ function openAchSlotPicker(slotIdx) {
     const claimed = ACHIEVEMENTS.filter(a => _achClaimed[a.id]);
     if (claimed.length === 0) {
         const empty = document.createElement('div');
+        empty.className = 'asp-empty-msg';
         empty.style.cssText = 'color:rgba(255,255,255,0.4);font-size:0.85em;text-align:center;padding:20px 10px;line-height:1.6;';
         empty.innerHTML = '🔒 Belum ada pencapaian yang diklaim.<br><span style="font-size:0.9em;opacity:0.7;">Buka halaman <strong style="color:#ffd200;">🏅 Pencapaian</strong> lalu klaim dulu!</span>';
         list.appendChild(empty);
@@ -19652,6 +19874,7 @@ function openAchSlotPicker(slotIdx) {
         });
     }
     ov.classList.add('active');
+    ov.focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll popup ini
 }
 
 function closeAchSlotPicker() {
@@ -20712,6 +20935,21 @@ const _achWsPatch = setInterval(() => {
         clearInterval(_achWsPatch);
     }
 }, 2000);
+
+// [FIX SCROLL KEYBOARD] custom-room-overlay dibuka dari banyak tempat berbeda
+// (bukan lewat 1 fungsi terpusat), jadi dipakai MutationObserver untuk otomatis
+// memfokuskan overlay setiap kali dia berubah jadi display:flex — supaya tombol
+// panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu.
+(function() {
+    const _crOverlay = document.getElementById('custom-room-overlay');
+    if (!_crOverlay) return;
+    const _crObserver = new MutationObserver(() => {
+        if (_crOverlay.style.display === 'flex') {
+            _crOverlay.focus({ preventScroll: true });
+        }
+    });
+    _crObserver.observe(_crOverlay, { attributes: true, attributeFilter: ['style'] });
+})();
 </script>
 </body>
 </html>

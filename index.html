@@ -28,6 +28,21 @@
             overflow: hidden;
         }
 
+        /* [FIX MOBILE] Cegah browser mobile (mis. WebView/MIUI) membesarkan
+           teks otomatis (text auto-boosting) yang bikin tombol jadi kepotong.
+           Dibatasi @media supaya TIDAK menyentuh tampilan desktop sama sekali. */
+        @media (max-width: 768px) {
+            html {
+                -webkit-text-size-adjust: 100%;
+                -moz-text-size-adjust: 100%;
+                text-size-adjust: 100%;
+            }
+            body, .matchmaking-container, .btn-start {
+                overflow-x: hidden;
+                max-width: 100vw;
+            }
+        }
+
         /* ============================================ judul Skripsi : PENGEMBANGAN MEDIA WEBSITE CARD GAME NUSANTARA MATERI DAERAHKU KEBANGGAANKU PADA MATA PELAJARAN IPAS KELAS V SD*/
         /* PRE-LOADING SCREEN */
         /* ============================================ */
@@ -349,6 +364,23 @@
                 width: 28px;
                 height: 28px;
                 font-size: 0.9em;
+            }
+        }
+        @media (max-width: 340px) {
+            .btn-start {
+                padding: 12px 24px;
+                font-size: 1em;
+                letter-spacing: 1px;
+            }
+            .menu-nav-scroll {
+                width: calc(2 * 88px + 10px);
+            }
+            .menu-nav-scroll-inner .btn-encyclopedia {
+                flex: 0 0 88px;
+                width: 88px;
+                padding: 7px 4px;
+                font-size: 0.62em;
+                min-height: 50px;
             }
         }
 
@@ -2722,6 +2754,34 @@
             width: 160px !important;
             height: auto !important;
             min-height: 48px !important;
+        }
+        /* [FIX MOBILE] Tombol "Laporkan Masalah" di atas dipaksa 160px lewat
+           !important, tidak ikut menyusut seperti tombol lain di breakpoint
+           mobile (560px/390px/340px) — inilah yang bikin kepotong di HP.
+           Override di sini HANYA aktif di layar mobile, menyamakan lebarnya
+           dengan tombol lain di breakpoint yang sama. Desktop tidak disentuh. */
+        @media (max-width: 560px) {
+            .menu-nav-scroll-inner .btn-encyclopedia.btn-lapor-style {
+                flex: 0 0 120px !important;
+                width: 120px !important;
+                padding: 10px 6px !important;
+            }
+        }
+        @media (max-width: 390px) {
+            .menu-nav-scroll-inner .btn-encyclopedia.btn-lapor-style {
+                flex: 0 0 100px !important;
+                width: 100px !important;
+                padding: 8px 5px !important;
+                min-height: 54px !important;
+            }
+        }
+        @media (max-width: 340px) {
+            .menu-nav-scroll-inner .btn-encyclopedia.btn-lapor-style {
+                flex: 0 0 88px !important;
+                width: 88px !important;
+                padding: 7px 4px !important;
+                min-height: 50px !important;
+            }
         }
         #pengembang-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;

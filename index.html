@@ -1441,6 +1441,13 @@
             color: #ffd700;
             letter-spacing: 0.04em;
             margin-bottom: 2px;
+            /* [FIX] .exp-bar-container ditaruh nested di dalam
+               <span class="profile-info-value"> yang punya
+               word-break:break-all. Properti itu terwariskan ke sini
+               sehingga kata "Level" bisa terpotong asal jadi "Leve"/"l".
+               Dikembalikan ke pemenggalan normal (hanya di antar kata). */
+            word-break: normal;
+            overflow-wrap: normal;
         }
         .exp-bar-track {
             background: #222;

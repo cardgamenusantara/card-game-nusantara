@@ -2489,6 +2489,25 @@
         @media (max-width: 480px) {
             .profile-rank-img { width: 70px; height: 70px; }
             .profile-rank-item { min-width: 100px; padding: 12px 14px; }
+
+            /* [FIX MOBILE] "Peringkat Saat Ini" & "Peringkat Tertinggi" dipaksa
+               tetap sejajar satu baris (bukan turun/stack) dengan lebar yang
+               sama-sama menyusut mengikuti layar, bukan lagi min-width kaku. */
+            .profile-rank-display { flex-wrap: nowrap; gap: 10px; }
+            .profile-rank-item { flex: 1 1 0; min-width: 0; padding: 10px 8px; }
+            .profile-rank-img { width: 56px; height: 56px; }
+            .profile-rank-label { font-size: 0.68em; flex-wrap: wrap; justify-content: center; }
+            .profile-rank-name { font-size: 0.85em; }
+            .profile-rank-points { font-size: 0.72em; }
+
+            /* [FIX MOBILE] Kotak "Poin Pengalaman" (exp-bar-container) tadinya
+               punya min-width:180px yang bikin ujungnya lebih lebar dari baris
+               "Bergabung"/ID di atasnya. Di HP, lebarnya sekarang ikut
+               menyesuaikan (mengisi) lebar kolom nilai, bukan lagi kaku. */
+            .exp-bar-container { min-width: 0; width: 100%; }
+            .profile-info-value { flex: 1; min-width: 0; }
+            .profile-info-label { min-width: 100px; }
+            #profile-content { padding: 20px 16px; }
         }
 
         /* ============================================ */

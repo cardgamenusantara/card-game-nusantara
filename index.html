@@ -2466,6 +2466,12 @@
             gap: 20px;
             justify-content: flex-start;
             flex-wrap: wrap;
+            /* [FIX] Tanpa ini, sebagai flex-item di dalam .profile-rank-section
+               lebarnya cuma mengikuti isi (fit-content) lalu rata kiri,
+               menyisakan ruang kosong di kanan yang besarnya tidak konsisten
+               dengan kotak "Pencapaian" di bawahnya. Dipaksa selalu 100% lebar
+               baris supaya kiri-kanannya simetris dengan kotak lain. */
+            flex: 1 1 100%;
         }
         .profile-rank-item {
             display: flex;
@@ -3537,6 +3543,10 @@
             align-items: center;
             align-self: stretch;        /* tinggi ikuti panel rank di sebelahnya */
             box-sizing: border-box;
+            /* [FIX] Sama seperti .profile-rank-display: dipaksa 100% lebar
+               baris supaya kotak "Pencapaian" selalu selebar penuh dan
+               kiri-kanannya simetris, bukan cuma selebar isinya. */
+            flex: 1 1 100%;
         }
         .ach-slots-below-label {
             font-size: 0.78em;

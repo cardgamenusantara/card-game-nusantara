@@ -2531,6 +2531,13 @@
                dan terbaca jelas. */
             .exp-bar-track { height: 22px; }
             .exp-bar-text { font-size: 0.62em; padding: 0 6px; gap: 4px; }
+
+            /* [FIX MOBILE] #visit-profile-content (layar "profil pemain lain")
+               belum punya versi mobile padding-nya, jadi masih 30px di semua
+               ukuran layar sementara #profile-content sudah 20px 16px.
+               Disamakan supaya lebar kolom kontennya identik dengan profil
+               sendiri, biar exp-bar-nya juga sama lega di kedua POV. */
+            #visit-profile-content { padding: 20px 16px; }
         }
 
         /* ============================================ */
@@ -15684,7 +15691,7 @@
                     } else {
                         const pct = info.neededExp > 0 ? Math.min(100, Math.round(info.currentExp / info.neededExp * 100)) : 100;
                         lvlEl.innerHTML = `
-                            <div class="exp-bar-container" style="min-width:160px;">
+                            <div class="exp-bar-container">
                                 <div class="exp-bar-label">⭐ Poin Pengalaman &nbsp; Level ${info.level}</div>
                                 <div class="exp-bar-track">
                                     <div class="exp-bar-fill" style="width:${pct}%"></div>
@@ -15818,7 +15825,7 @@
                         } else {
                             const pct = info.neededExp > 0 ? Math.min(100, Math.round(info.currentExp / info.neededExp * 100)) : 100;
                             lvlEl.innerHTML = `
-                                <div class="exp-bar-container" style="min-width:160px;">
+                                <div class="exp-bar-container">
                                     <div class="exp-bar-label">⭐ Poin Pengalaman &nbsp; Level ${info.level}</div>
                                     <div class="exp-bar-track">
                                         <div class="exp-bar-fill" style="width:${pct}%"></div>

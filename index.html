@@ -1426,6 +1426,15 @@
             padding: 5px 8px 6px 8px;
             min-width: 180px;
         }
+        /* [FIX] Dulu exp-bar milik "profil pemain lain" punya inline
+           style="min-width:160px" yang di mobile mengalahkan aturan
+           mobile (bug utama yang sudah diperbaiki). Inline itu sudah
+           dihapus dari HTML, tapi supaya tampilan DESKTOP-nya tetap
+           persis seperti semula (160px, bukan default 180px), nilai
+           lama dikembalikan khusus untuk layar lebar di sini saja. */
+        @media (min-width: 481px) {
+            #vp-player-level .exp-bar-container { min-width: 160px; }
+        }
         .exp-bar-label {
             font-size: 0.72em;
             font-weight: bold;
@@ -2466,12 +2475,6 @@
             gap: 20px;
             justify-content: flex-start;
             flex-wrap: wrap;
-            /* [FIX] Tanpa ini, sebagai flex-item di dalam .profile-rank-section
-               lebarnya cuma mengikuti isi (fit-content) lalu rata kiri,
-               menyisakan ruang kosong di kanan yang besarnya tidak konsisten
-               dengan kotak "Pencapaian" di bawahnya. Dipaksa selalu 100% lebar
-               baris supaya kiri-kanannya simetris dengan kotak lain. */
-            flex: 1 1 100%;
         }
         .profile-rank-item {
             display: flex;
@@ -2521,6 +2524,14 @@
             .profile-rank-label { font-size: 0.68em; flex-wrap: wrap; justify-content: center; }
             .profile-rank-name { font-size: 0.85em; }
             .profile-rank-points { font-size: 0.72em; }
+
+            /* [FIX MOBILE] Tanpa ini, .profile-rank-display & .ach-slots-below
+               sebagai flex-item cuma selebar isinya (fit-content) lalu rata
+               kiri, menyisakan ruang kosong kanan yang beda-beda besarnya.
+               Dipaksa 100% lebar baris HANYA di mobile supaya simetris,
+               tanpa mengubah layout desktop. */
+            .profile-rank-display { flex: 1 1 100%; }
+            .ach-slots-below { flex: 1 1 100%; }
 
             /* [FIX MOBILE] Kotak "Poin Pengalaman" (exp-bar-container) tadinya
                punya min-width:180px yang bikin ujungnya lebih lebar dari baris
@@ -3544,10 +3555,6 @@
             align-items: center;
             align-self: stretch;        /* tinggi ikuti panel rank di sebelahnya */
             box-sizing: border-box;
-            /* [FIX] Sama seperti .profile-rank-display: dipaksa 100% lebar
-               baris supaya kotak "Pencapaian" selalu selebar penuh dan
-               kiri-kanannya simetris, bukan cuma selebar isinya. */
-            flex: 1 1 100%;
         }
         .ach-slots-below-label {
             font-size: 0.78em;

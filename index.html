@@ -2518,7 +2518,9 @@
             font-size: 0.8em;
             color: rgba(255,255,255,0.65);
         }
+        .vp-rank-info-mobile-only { display: none; }
         @media (max-width: 480px) {
+            .vp-rank-info-mobile-only { display: inline-block; }
             .profile-rank-img { width: 70px; height: 70px; }
             .profile-rank-item { min-width: 100px; padding: 12px 14px; }
 
@@ -5954,7 +5956,7 @@
                         <div class="profile-rank-item">
                             <div class="profile-rank-label" style="display:flex;align-items:center;gap:6px;">
                                 Peringkat Tertinggi
-                                <button class="btn-rank-info" onclick="playSound('button');showRankInfo()" title="Info sistem peringkat">ℹ️</button>
+                                <button class="btn-rank-info vp-rank-info-mobile-only" onclick="playSound('button');showRankInfo()" title="Info sistem peringkat">ℹ️</button>
                             </div>
                             <img id="vp-peak-img" src="gambar/rank/Bronze.png" alt="Bronze III" class="profile-rank-img">
                             <div class="profile-rank-name" id="vp-peak-name">Perunggu III</div>

@@ -5952,7 +5952,10 @@
                             <div class="profile-rank-points" id="vp-rank-points">0 / 100 poin</div>
                         </div>
                         <div class="profile-rank-item">
-                            <div class="profile-rank-label">Peringkat Tertinggi</div>
+                            <div class="profile-rank-label" style="display:flex;align-items:center;gap:6px;">
+                                Peringkat Tertinggi
+                                <button class="btn-rank-info" onclick="playSound('button');showRankInfo()" title="Info sistem peringkat">ℹ️</button>
+                            </div>
                             <img id="vp-peak-img" src="gambar/rank/Bronze.png" alt="Bronze III" class="profile-rank-img">
                             <div class="profile-rank-name" id="vp-peak-name">Perunggu III</div>
                             <div class="profile-rank-points" id="vp-peak-points">0 / 100 poin</div>

@@ -1457,6 +1457,22 @@
             font-size: 0.72em; font-weight: bold;
             color: #fff; text-shadow: 0 1px 3px #000;
             pointer-events: none;
+            gap: 6px;
+        }
+        /* [FIX] Cegah teks di dalam exp-bar-text ikut wrap ke baris baru.
+           Kalau kepanjangan, dipotong rapi dengan ellipsis (...) bukan
+           terpotong mentah karena overflow:hidden pada track. */
+        .exp-bar-text span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .exp-bar-text span:first-child {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .exp-bar-text span:last-child {
+            flex: 0 0 auto;
         }
         .exp-bar-numbers { display: none; }
 
@@ -2508,6 +2524,13 @@
             .profile-info-value { flex: 1; min-width: 0; }
             .profile-info-label { min-width: 100px; }
             #profile-content { padding: 20px 16px; }
+
+            /* [FIX MOBILE] Teks di dalam exp-bar-track (mis. "1915/2842 Poin"
+               dan "67%") kepotong karena kolomnya sempit di HP. Perkecil
+               font & tambah tinggi track sedikit supaya tetap satu baris
+               dan terbaca jelas. */
+            .exp-bar-track { height: 22px; }
+            .exp-bar-text { font-size: 0.62em; padding: 0 6px; gap: 4px; }
         }
 
         /* ============================================ */

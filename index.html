@@ -6850,8 +6850,10 @@
             el.style.display = msg ? 'block' : 'none';
         }
 
-        function setAuthLoading(show) {
-            document.getElementById('auth-loading').style.display = show ? 'block' : 'none';
+        function setAuthLoading(show, text) {
+            const el = document.getElementById('auth-loading');
+            el.style.display = show ? 'block' : 'none';
+            if (show) el.textContent = text || '⏳ Memproses...';
         }
 
         // =============================================
@@ -6953,25 +6955,77 @@
         }
 
         // =============================================
+        // KONFIRMASI PERGANTIAN AKUN SELESAI
+        // (memastikan info tersampaikan ke: pemain, sistem, dan server)
+        // =============================================
+        // Dipanggil setiap kali login/ganti akun berhasil. Menunggu 3 hal selesai
+        // sebelum layar auth ditutup dan pre-loading-screen ditampilkan:
+        //   1) SISTEM  → token sesi baru aktif & profil (nickname/avatar) akun baru sudah termuat
+        //   2) SERVER  → Firebase sudah mengonfirmasi (presence akun baru tercatat di server)
+        //   3) PEMAIN  → status setiap tahap ditampilkan di layar auth (auth-loading)
+        // Dibungkus try/catch + timeout agar tidak membuat login "macet" jika salah satu
+        // langkah lambat/gagal (misal koneksi lemah) — tetap lanjut setelah batas waktu.
+        function _withTimeout(promise, ms) {
+            return Promise.race([
+                promise,
+                new Promise(resolve => setTimeout(resolve, ms))
+            ]);
+        }
+
+        async function confirmAccountSwitch(user, nickname) {
+            setAuthLoading(true, '🔄 Menyelesaikan pergantian akun...');
+
+            // 1) SISTEM — pastikan sesi token akun BARU benar-benar aktif
+            //    (force refresh supaya tidak ada kemungkinan token akun lama masih terpakai)
+            try {
+                setAuthLoading(true, '🔐 Memverifikasi sesi akun...');
+                await _withTimeout(user.getIdToken(true), 4000);
+            } catch (e) {
+                console.warn('confirmAccountSwitch: gagal refresh token, lanjut tanpa blocking →', e);
+            }
+
+            // 2) SISTEM — pastikan profil (avatar) akun BARU sudah termuat,
+            //    bukan avatar sisa akun sebelumnya
+            setAuthLoading(true, '🖼️ Menyinkronkan profil akun...');
+            await _withTimeout(new Promise(resolve => {
+                db.ref(`userAvatars/${user.uid}`).get().then(avSnap => {
+                    if (avSnap.exists()) {
+                        _selectedAvatar = String(avSnap.val());
+                        localStorage.setItem('selectedAvatar', _selectedAvatar);
+                    } else {
+                        // Pertama kali: sinkronkan avatar localStorage (atau default 7) ke Firebase
+                        if (!_selectedAvatar) _selectedAvatar = '7';
+                        db.ref(`userAvatars/${user.uid}`).set(_selectedAvatar).catch(() => {});
+                    }
+                    resolve();
+                }).catch(() => { if (!_selectedAvatar) _selectedAvatar = '7'; resolve(); });
+            }), 4000);
+            updateProfileAvatar();
+
+            // 3) SERVER — tunggu Firebase mengonfirmasi sesi akun baru tercatat
+            //    (presence/{uid}/{sessionToken} berhasil ditulis ke server)
+            setAuthLoading(true, '🌐 Menghubungi server, menyiapkan sesi...');
+            await _withTimeout(new Promise(resolve => {
+                setupPresence(user, nickname, resolve);
+            }), 5000);
+
+            // 4) PEMAIN — beri konfirmasi visual singkat bahwa proses selesai
+            setAuthLoading(true, '✅ Akun siap! Memuat game...');
+            await new Promise(resolve => setTimeout(resolve, 400));
+        }
+
+        // =============================================
         // AFTER LOGIN + NICKNAME READY
         // =============================================
-        function onAuthAndNicknameReady(user, nickname) {
+        async function onAuthAndNicknameReady(user, nickname) {
+            // [FIX] Tunggu proses pergantian akun benar-benar tuntas (sistem + server + info ke pemain)
+            // SEBELUM layar auth ditutup dan pre-loading-screen ditampilkan. Ini mencegah pre-loading-screen
+            // muncul saat data akun baru (profil/presence) belum sepenuhnya siap di sisi client & server.
+            await confirmAccountSwitch(user, nickname);
+
             setAuthLoading(false);
             hideAuthScreen();        // ← pastikan form login tertutup sebelum tampilkan layar berikutnya
             hideNicknameScreen();    // ← pastikan nickname screen juga tertutup
-
-            // Load avatar from Firebase (sync across devices), fallback to localStorage
-            db.ref(`userAvatars/${user.uid}`).get().then(avSnap => {
-                if (avSnap.exists()) {
-                    _selectedAvatar = String(avSnap.val());
-                    localStorage.setItem('selectedAvatar', _selectedAvatar);
-                } else {
-                    // First time: sync localStorage avatar (or default 7) to Firebase
-                    if (!_selectedAvatar) _selectedAvatar = '7';
-                    db.ref(`userAvatars/${user.uid}`).set(_selectedAvatar).catch(() => {});
-                }
-                updateProfileAvatar();
-            }).catch(() => { if (!_selectedAvatar) _selectedAvatar = '7'; });
 
             showProfileBadge(user.uid, nickname);
             _startPartyInviteListener();        // dengarkan undangan party dari teman
@@ -6986,9 +7040,9 @@
                 if (_emailEl) _emailEl.textContent = user.email || '-';
             }
 
-            // Cek & tandai presence (deteksi login di device lain)
-            setupPresence(user, nickname);
-            
+            // Catatan: presence (deteksi login di device lain) sudah disiapkan & dikonfirmasi
+            // di dalam confirmAccountSwitch() di atas — tidak perlu dipanggil ulang di sini.
+
             // Cek localStorage apakah ada sesi pertandingan aktif
             const savedRoomId    = lsGet(LS.ROOM_ID);
             const savedPlayerId  = lsGet(LS.PLAYER_ID);
@@ -7436,6 +7490,9 @@
         let _sessionToken = null;
         let _heartbeatInterval = null;
         let _kickRef = null;
+        let _presenceWatchRef = null;
+        let _presenceWatchFn  = null;
+        let _presenceWatchDebounce = null;
         let _pwChangeListenerRef = null;
         let _pwChangeListenerFn  = null;
         let _iAmChangingPassword = false; // flag: saya sendiri yang sedang ganti password
@@ -7447,10 +7504,18 @@
          * Tulis status online ke Firebase Realtime DB.
          * Jika akun sudah online di device lain → tampilkan notifikasi.
          */
-        function setupPresence(user, nickname) {
+        function setupPresence(user, nickname, onServerConfirmed) {
             clearPresence(); // bersihkan listener lama jika ada
 
             const uid = user.uid;
+            // Pastikan callback konfirmasi-server hanya terpanggil sekali,
+            // meskipun listener '.info/connected' di bawah bisa terpicu berkali-kali.
+            let _serverConfirmed = false;
+            function _confirmServerOnce() {
+                if (_serverConfirmed) return;
+                _serverConfirmed = true;
+                if (typeof onServerConfirmed === 'function') onServerConfirmed();
+            }
 
             // Token unik per sesi — setiap tab/browser punya node sendiri
             _sessionToken = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -7493,6 +7558,9 @@
                         online:    true,
                         token:     _sessionToken,
                     });
+                    // [FIX] Server (Firebase) sudah resmi mencatat sesi akun yang baru login/ganti.
+                    // Ini menjadi sinyal "server sudah tahu" bahwa pergantian akun selesai.
+                    _confirmServerOnce();
                     // [FIX] Saat internet kembali di luar game → langsung tutup popup "Koneksi Gagal"
                     // tanpa mengubah pesannya (pesan "kembali + Coba Lagi" dihapus permanen karena
                     // redundan — toast sudah cukup sebagai feedback, dan tidak ada yang perlu di-reconnect
@@ -7547,9 +7615,11 @@
             // Dipasang sekali saat login, berjalan di semua layar (home, matchmaking, in-game).
             // Tidak perlu klik PLAY — jika ada device lain login dengan akun sama,
             // modal langsung muncul tanpa menunggu interaksi user.
-            let _presenceWatchRef = null;
-            let _presenceWatchFn  = null;
-            let _presenceWatchDebounce = null;
+            // [FIX] _presenceWatchRef/_presenceWatchFn/_presenceWatchDebounce dipindah ke scope
+            // atas (dekat _kickRef) supaya clearPresence() benar-benar bisa mematikannya saat
+            // logout — sebelumnya dideklarasikan lokal di sini sehingga clearPresence() (fungsi
+            // terpisah) tidak pernah bisa melihatnya, dan watcher tetap hidup pasca-logout,
+            // menyebabkan _kicked-modal kadang muncul lagi beberapa detik setelah logout.
 
             function _startPresenceWatcher() {
                 if (_presenceWatchRef) {
@@ -9997,6 +10067,23 @@
             const spinnerEl = document.getElementById('pre-loading-spinner');
             const subtitleEl = document.querySelector('.pre-loading-subtitle');
             const playBtn = document.getElementById('btn-play');
+            const hintEl = document.getElementById('btn-play-rejoin-hint');
+
+            // [FIX BUG REVERT KE PRE-LOADING] Paksa reset tampilan loading ke kondisi awal
+            // SETIAP kali proses loading baru dimulai (bukan cuma andalkan CSS default).
+            // Tanpa ini: setelah logout lalu login lagi di tab yang sama, btn-play masih
+            // punya style "display:block" sisa dari sesi sebelumnya (leftover inline style
+            // yang tidak pernah direset saat logout). Akibatnya tombol PLAY langsung terlihat
+            // & bisa diklik SEBELUM animasi loading + pengecekan room aktif di server selesai.
+            // Kalau pemain sempat klik PLAY di celah ini, dia "menyalip" ke matchmaking-screen —
+            // tapi proses loading lama tetap jalan di background, dan begitu selesai (beberapa
+            // detik kemudian) tetap memanggil showHomeButtons() yang memaksa tampilkan lagi
+            // pre-loading-screen di atas matchmaking-screen. Reset di sini menutup celah itu.
+            if (playBtn) { playBtn.style.display = 'none'; }
+            if (hintEl)  { hintEl.style.display = 'none'; }
+            if (infoEl)    infoEl.style.display = 'block';
+            if (spinnerEl) spinnerEl.style.display = 'block';
+            if (subtitleEl) subtitleEl.style.display = '';
 
             const steps = [
                 "Memuat 380 kartu provinsi...",

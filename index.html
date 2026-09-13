@@ -7371,6 +7371,18 @@
             // lalu server satunya sebagai jaring pengaman sebelum menyimpulkan "tidak ada match".
             const result = await _findMyRoomWithFailover(userUid, 6000);
             if (result.found) {
+                // [FIX GUARD] Samakan dengan guard di alur awal load: kalau kita baru saja
+                // keluar sukarela (LEAVE_MATCH) dalam 30 detik terakhir, abaikan ROOM_FOUND
+                // ini — kemungkinan besar server belum sempat memproses LEAVE_MATCH (race
+                // condition di koneksi lemah), bukan berarti benar-benar masih ada match aktif.
+                const _vlTs = lsGet(LS.VOLUNTARY_LEAVE);
+                if (_vlTs && (Date.now() - parseInt(_vlTs, 10)) < 30000) {
+                    addLog('🚫 ROOM_FOUND diabaikan — pemain baru saja keluar sukarela (race condition guard).');
+                    lsDel(LS.VOLUNTARY_LEAVE);
+                    showHomeButtons(false, true);
+                    return;
+                }
+                lsDel(LS.VOLUNTARY_LEAVE);
                 // [FIX] Jangan auto-reconnect — simpan info rejoin dulu,
                 // baru reconnect setelah user menekan tombol PLAY.
                 // Ini mencegah Device B (login akun sama) langsung masuk pertandingan
@@ -12023,6 +12035,12 @@
             // Update tombol surrender/hasil setiap kali tampilan dirender ulang
             // Ini memastikan tombol "Hasil Pertandingan" muncul saat gameOver = true
             updateButtons();
+
+            // [FIX REALTIME] Refresh ISI draw-level-overlay kalau sedang terbuka, supaya
+            // progress/rate/stok yang ditampilkan tidak basi selagi popup dibiarkan terbuka.
+            // Dibungkus typeof-check sebagai jaga-jaga (defensive), dan fungsinya sendiri
+            // langsung keluar tanpa efek apa pun kalau popup memang sedang tertutup.
+            if (typeof _refreshDrawLevelOverlayIfOpen === 'function') _refreshDrawLevelOverlayIfOpen();
         }
 
         // =============================================
@@ -14000,6 +14018,8 @@
                 const el = document.getElementById(id);
                 if (el) el.classList.remove('active');
             });
+            // [FIX] reset target draw-level-overlay agar tidak nyasar ke pertandingan berikutnya
+            _dlLastPlayerIdArg = undefined;
             // [FIX] Popup voting Tahap 1 juga harus ikut tertutup — sebelumnya tidak ada di daftar
             // di atas, jadi kalau user klik "Kembali ke Home" tepat saat voting masih berlangsung,
             // popup-nya nempel terus (karena position:fixed) sampai halaman utama.
@@ -14034,15 +14054,43 @@
             const _roomId = currentRoomId;
             stopClientKeepAlive();
             ws = null; // null-kan segera agar tidak ada handler lain yang pakai
-            // Putus handler segera agar pesan stale (GAME_OVER, GAME_STATE_UPDATE)
-            // tidak masuk lagi selama jeda sebelum _ws.close() dieksekusi
-            if (_ws) { _ws.onmessage = null; _ws.onclose = null; _ws.onerror = null; }
+            // Putus handler onclose/onerror segera agar tidak ada yang bereaksi ke
+            // penutupan socket yang memang kita sengaja lakukan sendiri di bawah ini.
+            if (_ws) { _ws.onclose = null; _ws.onerror = null; }
             _endGameShown = false; // reset untuk pertandingan berikutnya
             if (_ws && _ws.readyState === WebSocket.OPEN && _roomId) {
+                // [FIX RACE LEAVE_MATCH vs koneksi lemah] Sebelumnya socket langsung ditutup
+                // 200ms setelah LEAVE_MATCH dikirim, tanpa menunggu server benar-benar
+                // memprosesnya. Di koneksi lambat/lemah, pesan LEAVE_MATCH bisa belum sampai
+                // saat socket dipaksa tutup, sehingga server TIDAK sempat menandai pemain
+                // sudah keluar — ini salah satu penyebab kadang "nyasar" balik ke room lama
+                // saat langsung membuat lobi baru. Sekarang: tunggu balasan LEAVE_MATCH_ACK
+                // dari server dulu (dengan fallback timeout supaya socket tidak menggantung
+                // kalau ack tidak pernah datang, mis. koneksi memang putus atau server lama
+                // yang belum mengirim ack).
+                let _leaveAckHandled = false;
+                const _finishLeaveClose = () => {
+                    if (_leaveAckHandled) return;
+                    _leaveAckHandled = true;
+                    _ws.onmessage = null;
+                    try { _ws.close(); } catch(e) {}
+                };
+                _ws.onmessage = (ev) => {
+                    try {
+                        const _ackData = JSON.parse(ev.data);
+                        if (_ackData && _ackData.type === 'LEAVE_MATCH_ACK' && _ackData.roomId === _roomId) {
+                            _finishLeaveClose();
+                        }
+                    } catch(e) {}
+                };
                 try { _ws.send(JSON.stringify({ type: 'LEAVE_MATCH', roomId: _roomId, isSpectator: !!_wasSpectator })); } catch(e) {}
-                const _closeDelay = _pendingWinSave ? 5000 : 200;
-                setTimeout(() => { try { _ws.close(); } catch(e) {} }, _closeDelay);
+                // [FIX] Fallback timeout dinaikkan sedikit (200ms → 1200ms) sebagai jaring
+                // pengaman kalau LEAVE_MATCH_ACK tidak kunjung datang, tanpa mengubah alur
+                // pindah ke halaman utama (itu tetap instan seperti sebelumnya).
+                const _closeDelay = _pendingWinSave ? 5000 : 1200;
+                setTimeout(_finishLeaveClose, _closeDelay);
             } else if (_ws) {
+                _ws.onmessage = null;
                 try { _ws.close(); } catch(e) {}
             }
 
@@ -16110,15 +16158,26 @@
         const DL_THRESHOLDS = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // BENAR: threshold[level] = drawCount minimum level tsb
         const DL_STARS = { 1:'⭐', 2:'⭐', 3:'⭐', 4:'⭐', 5:'⭐', 6:'⭐', 7:'⭐', 8:'⭐', 9:'⭐', 10:'⭐', 11:'🌟', 12:'✨' };
 
-        function showDrawLevelInfo(playerId) {
-            if (!gameState) return;
-            if (!gameState.players || !gameState.players.length) return;
+        // [FIX REALTIME] Simpan argumen playerId terakhir yang dipakai membuka
+        // draw-level-overlay. Dipakai oleh _refreshDrawLevelOverlayIfOpen() supaya bisa
+        // me-render ulang ISI popup (bukan cuma label kecil di luar popup) setiap kali
+        // gameState baru datang, tanpa perlu menutup-buka popupnya.
+        // undefined = overlay belum pernah dibuka sama sekali di sesi ini.
+        let _dlLastPlayerIdArg = undefined;
+
+        // Fungsi INTI: hanya menulis ulang konten popup (judul, bintang, progress bar,
+        // rate grid, stok provinsi) berdasarkan gameState TERBARU.
+        // SENGAJA tidak menyentuh document.body.style.overflow atau .focus() supaya
+        // aman dipanggil berulang-ulang selagi popup terbuka (tidak mencuri fokus/scroll
+        // pengguna yang mungkin sedang membaca/scroll di dalam popup).
+        function _renderDrawLevelContent(playerId) {
+            if (!gameState) return false;
+            if (!gameState.players || !gameState.players.length) return false;
             const targetId = playerId || myPlayerId;
             // Jika targetId null (transisi reconnect), fallback ke player pertama yg bukan bot,
             // atau player pertama apapun agar popup tetap bisa tampil
             const resolvedId = targetId || (gameState.players[0] && gameState.players[0].id);
-            if (!resolvedId) return;
-            document.body.style.overflow = 'hidden';
+            if (!resolvedId) return false;
             const player = gameState.players.find(p => p.id === resolvedId);
             const level  = (player && player.drawLevel) || 1;
             const count  = (player && player.drawCount) || 0;
@@ -16197,8 +16256,7 @@
                 }
 
                 const _dlOverlay = document.getElementById('draw-level-overlay');
-                _dlOverlay.classList.add('active');
-                _dlOverlay.focus({ preventScroll: true });
+                if (_dlOverlay) _dlOverlay.classList.add('active');
 
                 // Render stok per provinsi di drawPile
                 const provStockEl = document.getElementById('dl-province-stock');
@@ -16219,17 +16277,42 @@
                         });
                     }
                 }
+                return true;
             } catch (e) {
-                console.error('[showDrawLevelInfo] Error saat render popup:', e);
+                console.error('[_renderDrawLevelContent] Error saat render popup:', e);
                 // Tetap tampilkan overlay meskipun render parsial gagal
                 const overlay = document.getElementById('draw-level-overlay');
-                if (overlay) { overlay.classList.add('active'); overlay.focus({ preventScroll: true }); }
+                if (overlay) overlay.classList.add('active');
+                return false;
             }
+        }
+
+        // Dipanggil saat tombol info diklik (buka popup / pindah target pemain yang dilihat).
+        // Ini satu-satunya tempat yang boleh mengunci scroll body & memindahkan fokus,
+        // supaya tidak ada perilaku baru dibanding sebelumnya untuk aksi klik pengguna.
+        function showDrawLevelInfo(playerId) {
+            if (!gameState || !gameState.players || !gameState.players.length) return;
+            _dlLastPlayerIdArg = (playerId === undefined) ? null : playerId; // ingat target utk refresh berikutnya
+            document.body.style.overflow = 'hidden';
+            _renderDrawLevelContent(playerId);
+            const _dlOverlay = document.getElementById('draw-level-overlay');
+            if (_dlOverlay) _dlOverlay.focus({ preventScroll: true });
+        }
+
+        // [FIX REALTIME] Dipanggil dari updateGameUI() setiap ada GAME_STATE_UPDATE baru.
+        // Hanya menulis ulang ISI popup KALAU popup memang sedang terbuka — kalau tertutup,
+        // fungsi ini tidak melakukan apa pun (tidak ada efek samping baru untuk kasus normal).
+        function _refreshDrawLevelOverlayIfOpen() {
+            const _dlOverlay = document.getElementById('draw-level-overlay');
+            if (!_dlOverlay || !_dlOverlay.classList.contains('active')) return;
+            if (_dlLastPlayerIdArg === undefined) return; // belum pernah dibuka via showDrawLevelInfo()
+            _renderDrawLevelContent(_dlLastPlayerIdArg);
         }
 
         function hideDrawLevelInfo() {
             document.getElementById('draw-level-overlay').classList.remove('active');
             restoreBodyOverflow();
+            _dlLastPlayerIdArg = undefined; // [FIX] reset agar tidak nyasar ke target lama di match berikutnya
         }
 
         // =============================================

@@ -14341,6 +14341,14 @@
             updatePlayerUI();
             updateBotsUI();
             updateButtons();
+
+            // [FIX BUG NYATA] Hook refresh draw-level-overlay SEBELUMNYA cuma terpasang
+            // di dalam _renderSpectatorView() (jalur khusus penonton), sehingga untuk
+            // PEMAIN AKTIF NORMAL (bukan spectator) popup tidak pernah ter-refresh sama
+            // sekali walau dibiarkan terbuka — persis seperti yang dilaporkan. Sekarang
+            // dipasang juga di jalur pemain aktif ini (akhir updateUI()), yang benar-benar
+            // dijalankan setiap GAME_STATE_UPDATE untuk pemain yang sedang bertanding.
+            if (typeof _refreshDrawLevelOverlayIfOpen === 'function') _refreshDrawLevelOverlayIfOpen();
         }
 
         function updateTopCardsUI() {

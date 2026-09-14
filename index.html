@@ -4555,6 +4555,7 @@
 
     <!-- NICKNAME SCREEN -->
     <div id="nickname-screen">
+        <img class="campus-logo" src="gambar/logo/Unmuh babel.png" alt="Logo Kampus">
         <div class="nickname-container">
             <h2 class="nickname-title">✍️ Pilih Nama</h2>
             <p class="nickname-subtitle">Nama akan ditampilkan kepada pemain lain</p>
@@ -4576,6 +4577,7 @@
 
     <!-- AVATAR SETUP SCREEN -->
     <div id="avatar-setup-screen">
+        <img class="campus-logo" src="gambar/logo/Unmuh babel.png" alt="Logo Kampus">
         <div class="avatar-setup-container">
             <h2 class="nickname-title">🖼️ Pilih Foto Profil</h2>
             <p class="nickname-subtitle">Pilih avatar yang mewakili kamu!</p>
@@ -6822,6 +6824,10 @@
             document.getElementById('nickname-screen').style.display = 'none';
             document.getElementById('pre-loading-screen').style.display = 'none';
             document.getElementById('matchmaking-screen').classList.remove('active');
+            // [FIX] Tutup semua overlay (settings, profile, leaderboard, ensiklopedia, dll)
+            // yang mungkin masih terbuka saat logout, agar tidak "nyangkut" di belakang auth-screen
+            closeAllScreens();
+            restoreBodyOverflow();
             // [FIX] Pastikan province-info-modal (position:fixed, sibling dari game-container) ikut ditutup
             (function(){ const m = document.getElementById('province-info-modal'); if (m) { m.classList.remove('active'); m.classList.remove('spectator-mode'); } })();
             document.getElementById('game-container').classList.remove('active');

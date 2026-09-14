@@ -1924,6 +1924,16 @@
             justify-content: space-between; position: sticky; top: 0; z-index: 100;
         }
         .enc-title { font-size: 1.4em; font-weight: bold; color: #fff; }
+        .enc-header-actions { display: flex; align-items: center; gap: 10px; }
+        .enc-scroll-btn {
+            background: rgba(255,255,255,0.15); color: #fff;
+            border: 1px solid rgba(255,255,255,0.3); border-radius: 10px;
+            width: 38px; height: 38px; font-size: 1em; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s; box-shadow: none; padding: 0; line-height: 1;
+        }
+        .enc-scroll-btn:hover { background: rgba(255,255,255,0.28); transform: none; box-shadow: none; }
+        .enc-scroll-btn:active { background: rgba(255,255,255,0.4); }
         .btn-enc-close {
             background: rgba(244,67,54,0.85); color: #fff;
             border: 1px solid rgba(255,255,255,0.3); border-radius: 10px;
@@ -1972,11 +1982,11 @@
             display: none; position: absolute; top: calc(100% + 8px); left: 0;
             background: linear-gradient(160deg, #3a2d6e 0%, #1a1040 100%);
             border: 1px solid rgba(255,255,255,0.2); border-radius: 14px;
-            min-width: 220px; max-height: 320px; overflow-y: auto;
+            min-width: 220px; max-height: 340px; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 500;
-            padding: 6px;
+            padding: 6px; flex-direction: column;
         }
-        .enc-prov-list.open { display: block; animation: encDropDown 0.2s ease; }
+        .enc-prov-list.open { display: flex; animation: encDropDown 0.2s ease; }
         @keyframes encDropDown { from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
         .enc-prov-list-item {
             padding: 9px 14px; border-radius: 10px; cursor: pointer;
@@ -1985,6 +1995,24 @@
         }
         .enc-prov-list-item:hover { background: rgba(255,255,255,0.15); color: #fff; }
         .enc-prov-list-item.active { background: linear-gradient(135deg,#f093fb 0%,#f5576c 100%); color: #fff; }
+        .enc-prov-list-item.kbd-focus { background: rgba(255,255,255,0.22); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.6); }
+        .enc-prov-search-wrap {
+            flex: 0 0 auto;
+            padding: 2px 2px 8px;
+        }
+        .enc-prov-items {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        .enc-prov-search-input {
+            width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.08);
+            color: #fff; font-size: 0.85em; outline: none; font-family: inherit;
+        }
+        .enc-prov-search-input::placeholder { color: rgba(255,255,255,0.45); }
+        .enc-prov-search-input:focus { border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.15); }
+        .enc-prov-empty-msg { padding: 10px 14px; font-size: 0.82em; color: rgba(255,255,255,0.55); text-align: center; }
 
         .enc-province-section { margin-bottom: 36px; }
         .enc-province-name {
@@ -4651,7 +4679,11 @@
     <div id="encyclopedia-screen" tabindex="-1" style="outline:none;">
         <div class="enc-header">
             <div class="enc-title">🧭 Ensiklopedia Nusantara</div>
-            <button class="btn-enc-close" onclick="playSound('x');hideEncyclopedia()">✖ Tutup</button>
+            <div class="enc-header-actions">
+                <button class="enc-scroll-btn" id="enc-scroll-top-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top')">⬆</button>
+                <button class="enc-scroll-btn" id="enc-scroll-bottom-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom')">⬇</button>
+                <button class="btn-enc-close" onclick="playSound('x');hideEncyclopedia()">✖ Tutup</button>
+            </div>
         </div>
 
         <div class="enc-tabs">
@@ -5012,6 +5044,16 @@
                     <div style="margin-top:16px;margin-bottom:8px;font-weight:bold;color:#c7d2fe;font-size:0.88em;letter-spacing:0.3px;">🔘 Tombol yang Sering Muncul</div>
                     <div style="display:flex;flex-direction:column;gap:8px;">
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
+                            <button disabled style="flex-shrink:0;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;width:38px;height:38px;font-size:1em;font-weight:bold;opacity:1;box-shadow:none;padding:0;">⬆</button>
+                            <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Panah ke Atas</div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ada di pojok kanan atas Ensiklopedia, sebelum tombol Tutup. Dipencet buat langsung lompat ke bagian paling atas halaman, jadi tidak usah geser-geser layar sendiri.</div></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
+                            <button disabled style="flex-shrink:0;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;width:38px;height:38px;font-size:1em;font-weight:bold;opacity:1;box-shadow:none;padding:0;">⬇</button>
+                            <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Panah ke Bawah</div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Kembarannya si panah ke atas, sama-sama ada di pojok kanan atas. Dipencet buat langsung lompat ke bagian paling bawah halaman.</div></div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:rgba(244,67,54,0.85);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:8px 18px;font-size:0.9em;font-weight:bold;opacity:1;box-shadow:none;">✖ Tutup</button>
                             <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Tutup (Bentuk Kotak Lonjong)</div>
                             <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ini bentuk tombol Tutup yang ada tulisannya, biasanya di pojok kanan atas Ensiklopedia atau Pengaturan. Dipencet buat balik ke tampilan sebelumnya. Aman dipencet kapan saja, permainanmu tidak akan hilang.</div></div>
@@ -5033,7 +5075,7 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;width:44px;height:44px;padding:0;font-size:1.3em;background:rgba(102,126,234,0.8);border:2px solid rgba(255,255,255,0.6);color:#fff;border-radius:8px;opacity:1;box-shadow:none;">🔄</button>
-                            <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Refresh</div>
+                            <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Muat Ulang</div>
                             <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Kalau layarmu kelihatan aneh atau kayak macet pas lagi main, pencet ini biar tampilannya diperbarui. Kalau warnanya jadi merah dan berkedip-kedip, itu artinya kamu memang harus segera pencet tombol ini.</div></div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
@@ -5052,7 +5094,7 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#f7971e,#ffd200);color:#3d2000;border-radius:30px;padding:9px 16px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">🏆 Papan Peringkat</button>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Lihat siapa aja yang rankingnya paling tinggi.</div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Lihat siapa aja yang peringkatnya paling tinggi.</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#43e97b,#38f9d7);color:#0a3d1f;border-radius:30px;padding:9px 16px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">🧭 Ensiklopedia</button>
@@ -5068,7 +5110,7 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff;border-radius:30px;padding:9px 16px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">⚔️ Tantang</button>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Bikin atau gabung lobi buat menantang teman bermain santai (tidak mempengaruhi ranking).</div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Bikin atau gabung lobi buat menantang teman bermain santai (tidak memengaruhi peringkat).</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#f6d365,#fda085);color:#5c2e00;border-radius:30px;padding:9px 16px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">📚 Materi</button>
@@ -5131,7 +5173,7 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;width:26px;height:26px;padding:0;font-size:0.8em;background:rgba(255,80,80,0.25);border:1px solid rgba(255,80,80,0.5);color:#fff;border-radius:50%;opacity:1;box-shadow:none;">✕</button>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Bulat kecil ini muncul pas kamu lagi dicariin lawan (matchmaking). Pencet buat batalin proses pencarian lawannya.</div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Bulat kecil ini muncul pas kamu lagi dicariin lawan main. Pencet buat batalin proses pencarian lawannya.</div>
                         </div>
                     </div>
 
@@ -5194,14 +5236,14 @@
                     <div style="display:flex;flex-direction:column;gap:8px;">
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:50px;padding:9px 18px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">🔄 Coba Lagi</button>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Coba nyambung ke server sekali lagi.</div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Coba nyambung ke sistem permainan sekali lagi.</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#3a3a5e,#26263f);color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:50px;padding:9px 18px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">🏠 Kembali ke Halaman Utama</button>
                             <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Balik ke halaman utama. Tenang, pertandinganmu tetap tersimpan.</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
-                            <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;border-radius:50px;padding:9px 18px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">💬 Hubungi Admin</button>
+                            <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;border-radius:50px;padding:9px 18px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">💬 Hubungi Pengelola</button>
                             <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Buka grup WhatsApp kalau kamu butuh bantuan.</div>
                         </div>
                     </div>
@@ -5211,7 +5253,7 @@
                     <div style="display:flex;flex-direction:column;gap:8px;">
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#f44336,#c62828);color:#fff;border:none;border-radius:14px;padding:10px 20px;font-size:0.9em;font-weight:bold;opacity:1;box-shadow:none;">🚪 Keluar</button>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Keluar dari akunmu, biar bisa login pakai akun lain.</div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Keluar dari akunmu, biar bisa masuk pakai akun lain.</div>
                         </div>
                     </div>
                 </div>
@@ -14692,8 +14734,22 @@
         }
 
         function hideEncyclopedia() {
-            document.getElementById('encyclopedia-screen').style.display = 'none';
+            const scr = document.getElementById('encyclopedia-screen');
+            scr.style.display = 'none';
+            scr.style.overflowY = ''; // reset jika sebelumnya dinonaktifkan sementara saat dropdown provinsi terbuka
             restoreBodyOverflow();
+        }
+
+        // Tombol scroll ke atas/bawah di header ensiklopedia
+        function encScrollTo(pos) {
+            const scr = document.getElementById('encyclopedia-screen');
+            if (!scr) return;
+            if (pos === 'top') {
+                scr.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                scr.scrollTo({ top: scr.scrollHeight, behavior: 'smooth' });
+            }
+            scr.focus({ preventScroll: true }); // supaya panah atas/bawah keyboard tetap berfungsi setelahnya
         }
 
         // =============================================
@@ -18529,19 +18585,90 @@
             const list = document.createElement('div');
             list.className = 'enc-prov-list';
 
+            // Kotak pencarian provinsi (tetap terlihat di atas, list item bisa discroll di bawahnya)
+            const searchWrap = document.createElement('div');
+            searchWrap.className = 'enc-prov-search-wrap';
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'enc-prov-search-input';
+            searchInput.placeholder = '🔍 Cari nama provinsi...';
+            searchInput.autocomplete = 'off';
+            searchWrap.appendChild(searchInput);
+            list.appendChild(searchWrap);
+
+            // Kontainer daftar item provinsi
+            const itemsContainer = document.createElement('div');
+            itemsContainer.className = 'enc-prov-items';
+            list.appendChild(itemsContainer);
+
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'enc-prov-empty-msg';
+            emptyMsg.textContent = 'Provinsi tidak ditemukan';
+            emptyMsg.style.display = 'none';
+            itemsContainer.appendChild(emptyMsg);
+
+            let _encProvNavIndex = -1; // indeks item yang sedang disorot lewat keyboard
+
+            function getVisibleItems() {
+                return Array.from(itemsContainer.querySelectorAll('.enc-prov-list-item'))
+                    .filter(el => el.style.display !== 'none');
+            }
+
+            function updateNavHighlight() {
+                const visible = getVisibleItems();
+                visible.forEach((el, i) => el.classList.toggle('kbd-focus', i === _encProvNavIndex));
+                if (_encProvNavIndex >= 0 && visible[_encProvNavIndex]) {
+                    visible[_encProvNavIndex].scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            function filterListItems(query) {
+                const q = query.trim().toLowerCase();
+                let visibleCount = 0;
+                itemsContainer.querySelectorAll('.enc-prov-list-item').forEach(el => {
+                    const match = !q || el.textContent.toLowerCase().includes(q);
+                    el.style.display = match ? '' : 'none';
+                    if (match) visibleCount++;
+                });
+                emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+                _encProvNavIndex = -1;
+                updateNavHighlight();
+            }
+
             function setFilter(name, label) {
                 currentFilter = name;
                 mainBtn.innerHTML = `🌏 ${label} <span class="enc-prov-arrow">▼</span>`;
-                list.querySelectorAll('.enc-prov-list-item').forEach(el => {
+                itemsContainer.querySelectorAll('.enc-prov-list-item').forEach(el => {
                     el.classList.toggle('active', el.dataset.name === name);
                 });
                 renderEncCards(name);
+                closeDropdown();
+            }
+
+            function openDropdown() {
+                list.classList.add('open');
+                mainBtn.classList.add('open');
+                // [FIX] Nonaktifkan sementara scroll layar ensiklopedia di belakang (termasuk
+                // area tab Kartu / enc-tab-btn-cards) agar navigasi panah keyboard di dalam
+                // daftar provinsi tidak ikut men-scroll konten di belakangnya.
+                const encScreen = document.getElementById('encyclopedia-screen');
+                if (encScreen) encScreen.style.overflowY = 'hidden';
+                searchInput.value = '';
+                filterListItems('');
+                // Fokuskan langsung ke kotak pencarian agar panah atas/bawah keyboard
+                // langsung bisa dipakai untuk menavigasi daftar tanpa perlu klik dulu.
+                searchInput.focus({ preventScroll: true });
+            }
+
+            function closeDropdown() {
                 list.classList.remove('open');
                 mainBtn.classList.remove('open');
+                const encScreen = document.getElementById('encyclopedia-screen');
+                if (encScreen) encScreen.style.overflowY = ''; // aktifkan kembali scroll layar ensiklopedia
                 // [FIX] Tombol dropdown mencuri fokus browser saat diklik, sehingga panah
                 // atas/bawah berhenti scroll konten sampai layar diklik ulang. Kembalikan
                 // fokus ke layar ensiklopedia agar keyboard langsung bisa scroll lagi.
-                document.getElementById('encyclopedia-screen').focus({ preventScroll: true });
+                if (encScreen) encScreen.focus({ preventScroll: true });
             }
 
             // Item "Semua Provinsi"
@@ -18550,7 +18677,7 @@
             allItem.dataset.name = 'Semua';
             allItem.textContent = '🌏 Semua Provinsi';
             allItem.onclick = () => { playSound('button'); setFilter('Semua', 'Semua Provinsi'); };
-            list.appendChild(allItem);
+            itemsContainer.insertBefore(allItem, emptyMsg);
 
             // Item per provinsi
             provinces.forEach(prov => {
@@ -18559,7 +18686,41 @@
                 item.dataset.name = prov.name;
                 item.textContent = prov.name;
                 item.onclick = () => { playSound('button'); setFilter(prov.name, prov.name); };
-                list.appendChild(item);
+                itemsContainer.insertBefore(item, emptyMsg);
+            });
+
+            // Ketik untuk mencari provinsi
+            searchInput.addEventListener('input', () => filterListItems(searchInput.value));
+
+            // Navigasi keyboard langsung di dalam kotak pencarian: panah atas/bawah
+            // pindah pilihan, Enter memilih, Escape menutup — tanpa perlu klik dulu,
+            // dan tidak ikut men-scroll layar ensiklopedia di belakangnya.
+            searchInput.addEventListener('keydown', (e) => {
+                const visible = getVisibleItems();
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault(); e.stopPropagation();
+                    if (visible.length) {
+                        _encProvNavIndex = (_encProvNavIndex + 1) % visible.length;
+                        updateNavHighlight();
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault(); e.stopPropagation();
+                    if (visible.length) {
+                        _encProvNavIndex = (_encProvNavIndex - 1 + visible.length) % visible.length;
+                        updateNavHighlight();
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault(); e.stopPropagation();
+                    if (_encProvNavIndex >= 0 && visible[_encProvNavIndex]) {
+                        visible[_encProvNavIndex].click();
+                    } else if (visible.length === 1) {
+                        visible[0].click();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault(); e.stopPropagation();
+                    playSound('x');
+                    closeDropdown();
+                }
             });
 
             // Toggle dropdown saat tombol diklik
@@ -18567,15 +18728,15 @@
                 e.stopPropagation();
                 playSound('button');
                 const isOpen = list.classList.contains('open');
-                list.classList.toggle('open', !isOpen);
-                mainBtn.classList.toggle('open', !isOpen);
+                if (isOpen) { closeDropdown(); } else { openDropdown(); }
             };
 
-            // Tutup dropdown saat klik di luar — lepas handler lama agar tidak menumpuk
+            // Tutup dropdown saat klik di luar area dropdown — lepas handler lama agar
+            // tidak menumpuk. Klik di dalam wrap (termasuk kotak pencarian) diabaikan
+            // supaya mengetik di kotak pencarian tidak langsung menutup dropdown.
             if (_encDropdownClickHandler) document.removeEventListener('click', _encDropdownClickHandler);
-            _encDropdownClickHandler = () => {
-                list.classList.remove('open');
-                mainBtn.classList.remove('open');
+            _encDropdownClickHandler = (e) => {
+                if (list.classList.contains('open') && !wrap.contains(e.target)) closeDropdown();
             };
             document.addEventListener('click', _encDropdownClickHandler);
 
@@ -19144,7 +19305,7 @@
                         padding:16px; font-size:0.92em; color:rgba(255,255,255,0.88);
                         line-height:1.7; margin-bottom:20px;
                     ">${desc}</div>
-                    <button onclick="document.getElementById('enc-card-desc-modal').remove();playSound('x');" style="
+                    <button onclick="closeCardDescModal()" style="
                         width:100%; padding:12px; border-radius:12px; border:none;
                         background:linear-gradient(135deg,#667eea,#764ba2);
                         color:#fff; font-size:0.95em; font-weight:bold; cursor:pointer;
@@ -19152,9 +19313,21 @@
                 </div>
             `;
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) { modal.remove(); playSound('x'); }
+                if (e.target === modal) closeCardDescModal();
             });
             document.body.appendChild(modal);
+        }
+
+        // [FIX] Menutup pop-up deskripsi kartu (klik tombol Tutup ataupun klik di luar
+        // kotak) sebelumnya tidak mengembalikan fokus keyboard ke layar ensiklopedia,
+        // sehingga tombol panah atas/bawah baru bisa scroll lagi setelah area layar
+        // diklik ulang. Fungsi ini menutup modal lalu langsung mengembalikan fokus.
+        function closeCardDescModal() {
+            const modal = document.getElementById('enc-card-desc-modal');
+            if (modal) modal.remove();
+            playSound('x');
+            const scr = document.getElementById('encyclopedia-screen');
+            if (scr) scr.focus({ preventScroll: true });
         }
 
         // === Dukungan scroll .enc-cards-row pakai tombol panah kiri/kanan saat kursor hover ===

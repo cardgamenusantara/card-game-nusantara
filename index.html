@@ -5767,7 +5767,11 @@
     <div id="teman-screen" tabindex="-1" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); z-index:15000; overflow-y:auto; outline:none;">
         <div class="enc-header">
             <div class="enc-title">👥 Teman</div>
-            <button class="btn-enc-close" onclick="playSound('x');hideTemanScreen()">✖ Tutup</button>
+            <div class="enc-header-actions">
+                <button class="enc-scroll-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','teman-screen')">⬆</button>
+                <button class="enc-scroll-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','teman-screen')">⬇</button>
+                <button class="btn-enc-close" onclick="playSound('x');hideTemanScreen()">✖ Tutup</button>
+            </div>
         </div>
         <div style="padding:20px; max-width:680px; margin:0 auto;">
             <!-- Cari Pemain -->
@@ -6071,7 +6075,11 @@
     <div id="settings-screen" tabindex="-1" style="display:none;outline:none;">
         <div class="settings-header">
             <span class="settings-title">⚙️ Pengaturan</span>
-            <button class="btn-settings-close" onclick="playSound('x');hideSettingsScreen()">✖ Tutup</button>
+            <div class="enc-header-actions">
+                <button class="enc-scroll-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','settings-screen')">⬆</button>
+                <button class="enc-scroll-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','settings-screen')">⬇</button>
+                <button class="btn-settings-close" onclick="playSound('x');hideSettingsScreen()">✖ Tutup</button>
+            </div>
         </div>
         <div class="settings-body">
 
@@ -19480,7 +19488,10 @@
         <div class="party-friend-picker-card">
             <div class="party-friend-picker-header">
                 <div class="party-friend-picker-header-title">Pilih teman online:</div>
-                <button class="party-friend-picker-close" onclick="playSound('x');closePartyFriendPicker()" title="Tutup">✖</button>
+                <div class="enc-header-actions">
+                    <button class="enc-scroll-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','party-friend-picker')">⬇</button>
+                    <button class="party-friend-picker-close" onclick="playSound('x');closePartyFriendPicker()" title="Tutup">✖</button>
+                </div>
             </div>
             <div class="party-friend-picker-body-inner">
                 <div class="picker-search-row">
@@ -19497,6 +19508,9 @@
                 </div>
                 <div class="party-friend-list" id="party-friend-list">
                     <div style="color:rgba(255,255,255,0.5);font-size:0.85em;padding:6px 0;">⏳ Memuat...</div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+                    <button class="enc-scroll-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','party-friend-picker')">⬆</button>
                 </div>
             </div>
         </div>
@@ -19559,11 +19573,17 @@
         <div class="custom-friend-picker">
             <div class="custom-friend-picker-header">
                 <div class="custom-friend-picker-title">Pilih teman online:</div>
-                <button class="custom-friend-picker-close" onclick="playSound('x');closeCustomFriendPicker()" title="Tutup">✖</button>
+                <div class="enc-header-actions">
+                    <button class="enc-scroll-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','custom-friend-picker')">⬇</button>
+                    <button class="custom-friend-picker-close" onclick="playSound('x');closeCustomFriendPicker()" title="Tutup">✖</button>
+                </div>
             </div>
             <div class="custom-friend-picker-body">
                 <div class="custom-friend-picker-body-inner">
                     <div id="custom-friend-list"></div>
+                    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+                        <button class="enc-scroll-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','custom-friend-picker')">⬆</button>
+                    </div>
                 </div>
             </div>
         </div>

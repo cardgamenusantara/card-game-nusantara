@@ -4680,8 +4680,8 @@
         <div class="enc-header">
             <div class="enc-title">🧭 Ensiklopedia Nusantara</div>
             <div class="enc-header-actions">
-                <button class="enc-scroll-btn" id="enc-scroll-top-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top')">⬆</button>
-                <button class="enc-scroll-btn" id="enc-scroll-bottom-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom')">⬇</button>
+                <button class="enc-scroll-btn" id="enc-scroll-top-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','encyclopedia-screen')">⬆</button>
+                <button class="enc-scroll-btn" id="enc-scroll-bottom-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','encyclopedia-screen')">⬇</button>
                 <button class="btn-enc-close" onclick="playSound('x');hideEncyclopedia()">✖ Tutup</button>
             </div>
         </div>
@@ -5046,7 +5046,7 @@
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;width:38px;height:38px;font-size:1em;font-weight:bold;opacity:1;box-shadow:none;padding:0;">⬆</button>
                             <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Panah ke Atas</div>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ada di pojok kanan atas Ensiklopedia, sebelum tombol Tutup. Dipencet buat langsung lompat ke bagian paling atas halaman, jadi tidak usah geser-geser layar sendiri.</div></div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ada di pojok kanan atas, sebelum tombol Tutup (misalnya di halaman Ensiklopedia atau Papan Peringkat). Dipencet buat langsung lompat ke bagian paling atas halaman, jadi tidak usah geser-geser layar sendiri.</div></div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;width:38px;height:38px;font-size:1em;font-weight:bold;opacity:1;box-shadow:none;padding:0;">⬇</button>
@@ -5750,7 +5750,11 @@
     <div id="leaderboard-screen" tabindex="-1" style="outline:none;">
         <div class="enc-header">
             <div class="enc-title">🏆 Papan Peringkat</div>
-            <button class="btn-enc-close" onclick="playSound('x');hideLeaderboard()">✖ Tutup</button>
+            <div class="enc-header-actions">
+                <button class="enc-scroll-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','leaderboard-screen')">⬆</button>
+                <button class="enc-scroll-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','leaderboard-screen')">⬇</button>
+                <button class="btn-enc-close" onclick="playSound('x');hideLeaderboard()">✖ Tutup</button>
+            </div>
         </div>
         <div style="padding:20px; max-width:680px; margin:0 auto;">
             <div class="friend-section-title" style="margin-bottom:16px;">🥇 Top 100 Pemain — Peringkat Tertinggi</div>
@@ -14740,9 +14744,9 @@
             restoreBodyOverflow();
         }
 
-        // Tombol scroll ke atas/bawah di header ensiklopedia
-        function encScrollTo(pos) {
-            const scr = document.getElementById('encyclopedia-screen');
+        // Tombol scroll ke atas/bawah di header (dipakai di Ensiklopedia, Papan Peringkat, dll)
+        function encScrollTo(pos, screenId) {
+            const scr = document.getElementById(screenId || 'encyclopedia-screen');
             if (!scr) return;
             if (pos === 'top') {
                 scr.scrollTo({ top: 0, behavior: 'smooth' });

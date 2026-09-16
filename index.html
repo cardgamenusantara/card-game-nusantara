@@ -5342,6 +5342,9 @@
                     </div>
                 </div>
 
+                <div class="materi-section-title">🎴 Kartu Bangka Belitung: Warisan Budaya Benda <span style="font-size:0.7em;font-weight:normal;color:rgba(255,255,255,0.55);">(ketuk kartu untuk lihat penjelasan)</span></div>
+                <div class="enc-cards-row" id="materi-cards-a-benda"></div>
+
                 <div class="materi-accordion" id="materi-acc-a2" onclick="toggleMateriAccordion('materi-acc-a2')">
                     <div class="materi-accordion-head">
                         <div class="materi-accordion-head-left">🎭 Warisan Budaya Tak Benda</div>
@@ -5359,6 +5362,9 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="materi-section-title">🎴 Kartu Bangka Belitung: Warisan Budaya Tak Benda <span style="font-size:0.7em;font-weight:normal;color:rgba(255,255,255,0.55);">(ketuk kartu untuk lihat penjelasan)</span></div>
+                <div class="enc-cards-row" id="materi-cards-a-takbenda"></div>
 
                 <div class="materi-section-title">🌐 Akulturasi &amp; Pelestarian Budaya <span style="font-size:0.7em;font-weight:normal;color:rgba(255,255,255,0.55);">(ketuk untuk membuka)</span></div>
 
@@ -5456,6 +5462,9 @@
                     </div>
                 </div>
 
+                <div class="materi-section-title">🎴 Kartu Bangka Belitung: SDA &amp; Sektor Ekonomi <span style="font-size:0.7em;font-weight:normal;color:rgba(255,255,255,0.55);">(ketuk kartu untuk lihat penjelasan)</span></div>
+                <div class="enc-cards-row" id="materi-cards-b"></div>
+
                 <div class="materi-section-title">📰 Faktor Pendukung Perekonomian Daerah</div>
                 <div class="materi-accordion" id="materi-acc-b2" onclick="toggleMateriAccordion('materi-acc-b2')">
                     <div class="materi-accordion-head">
@@ -5547,6 +5556,9 @@
                         <span class="materi-flip-hint">tekan</span>
                     </div>
                 </div>
+
+                <div class="materi-section-title">🎴 Kartu Bangka Belitung: Produk Unggulan Daerah <span style="font-size:0.7em;font-weight:normal;color:rgba(255,255,255,0.55);">(ketuk kartu untuk lihat penjelasan)</span></div>
+                <div class="enc-cards-row" id="materi-cards-c"></div>
 
                 <div class="materi-section-title">📋 Komponen Brosur Promosi yang Baik <span style="font-size:0.7em;font-weight:normal;color:rgba(255,255,255,0.55);">(coba centang semua!)</span></div>
 
@@ -14776,6 +14788,7 @@
             document.getElementById('materi-screen').style.display = 'block';
             document.getElementById('materi-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
             document.body.style.overflow = 'hidden';
+            renderAllMateriCardRows();
         }
 
         function hideMateriScreen() {
@@ -18850,7 +18863,7 @@
             "Pempek": "Kuliner legendaris berbahan ikan dan sagu yang disajikan dengan cuko pedas manis, kebanggaan kuliner nusantara.",
             // BANGKA BELITUNG
             "Timah": "Bangka Belitung adalah penghasil timah terbesar di Indonesia bahkan salah satu yang terbesar di dunia! Timah ini sangat berguna untuk bahan pembuatan alat elektronik seperti HP dan laptop yang kalian gunakan sehari-hari.",
-            "Benteng Kuto Panji": "Benteng bersejarah yang terletak di Belinyu. Dindingnya sangat kuat karena terbuat dari campuran batu, putih telur, dan madu. Sungguh luar biasa ya, ternyata bisa sekokoh itu!",
+            "Benteng Kuto Panji": "Benteng Kuto Panji adalah sebuah benteng tua yang ada di Desa Kuto Panji, Kecamatan Belinyu, Pulau Bangka. Menurut cerita, benteng ini dibangun oleh seorang raja keturunan Tiongkok bernama Bong Khiung Fu. Ia melarikan diri ke Indonesia karena ada peperangan di negerinya, lalu sampai di Pulau Bangka dan membangun istana kecil untuk melindungi keluarganya. Setelah itu, ia meminta izin kepada Sultan Palembang untuk membangun benteng yang lebih besar dan kuat. Pembangunannya dimulai tahun 1664 dan selesai tahun 1669, jadi memakan waktu sekitar 5 tahun. Sekarang, benteng ini sudah runtuh, namun masih menyisakan pondasi dan beberapa bagian dinding setinggi 4 meter yang berdiri kokoh. Konon, dahulu di dalam benteng ini juga ada sebuah kelenteng untuk beribadah, dan masyarakat sekitar percaya masih ada harta karun peninggalan Bong Khiung Fu yang tersimpan di sana, seperti perhiasan dan keping uang emas.",
             "Rumah Rakit": "Sesuai namanya, rumah ini dibangun di atas air! Rumah panggung yang mengapung ini dulunya dibuat agar warga bisa tinggal dekat dengan sungai yang menjadi jalur transportasi utama mereka.",
             "Pertambangan Timah": "Sebagian besar ekonomi di Bangka Belitung digerakkan oleh tambang timah. Banyak warga yang bekerja di perusahaan tambang maupun mengolah logam timah untuk dijual ke berbagai negara.",
             "Siwar": "Senjata tajam khas Bangka Belitung yang mirip dengan parang tapi lebih ramping. Biasanya digunakan untuk perlindungan diri atau sebagai alat bantu saat bekerja di kebun.",
@@ -18858,7 +18871,7 @@
             "Dambus": "Alat musik petik yang unik karena bagian ujungnya sering diukir menyerupai kepala rusa yang gagah. Suaranya sangat merdu dan sering dipakai untuk mengiringi lagu-lagu gembira.",
             "Tari Sepen": "Tarian yang sangat lincah dan penuh kegembiraan. Gerakannya banyak menggunakan tepukan tangan dan hentakan kaki yang bersemangat, terinspirasi dari gerakan bela diri yang dinamis.",
             "Buang Jong": "Upacara membuang miniatur perahu ke laut yang sangat bermakna. Ini adalah tradisi suku Laut untuk memohon keselamatan dan sebagai bentuk syukur atas hasil laut yang melimpah.",
-            "Lempah Kuning": "Sup ikan khas Bangka Belitung dengan kuah berwarna kuning cerah yang menggugah selera. Warna kuningnya berasal dari kunyit segar. Rasanya segar, asam, dan gurih — cocok sekali dimakan saat siang hari yang panas.",
+            "Lempah Kuning": "Sup ikan khas Bangka Belitung dengan kuah berwarna kuning cerah yang menggugah selera. Warna kuningnya berasal dari kunyit segar. Rasanya segar, asam, dan gurih sehingga cocok sekali dimakan saat siang hari yang panas.",
             // LAMPUNG
             "Kopi Robusta Lampung": "Lampung sangat terkenal dengan kopi Robustanya yang punya rasa kuat dan mantap. Selain kopi yang nikmat, Lampung juga merupakan penghasil pisang terbesar dan lada hitam yang melimpah untuk seluruh Indonesia.",
             "Menara Siger": "Bangunan megah berwarna kuning cerah yang berdiri di atas bukit dekat Pelabuhan Bakauheni. Bentuknya menyerupai mahkota pengantin wanita Lampung yang indah dan menjadi simbol kebanggaan masyarakat di sana.",
@@ -19260,7 +19273,21 @@
         // =============================================
         // MODAL DESKRIPSI KARTU ENSIKLOPEDIA
         // =============================================
+        // [FIX] Modal ini dipakai dari lebih dari satu layar (Ensiklopedia
+        // maupun Materi). Sebelumnya closeCardDescModal() selalu mengembalikan
+        // fokus ke #encyclopedia-screen secara hardcode, sehingga saat modal
+        // dibuka dari layar Materi, panah atas/bawah keyboard jadi mati di
+        // layar Materi (fokus malah balik ke layar ensiklopedia yang sedang
+        // tersembunyi). Sekarang layar mana yang sedang aktif saat modal
+        // dibuka disimpan, lalu dipakai lagi saat modal ditutup.
+        let _cardDescModalReturnScreenId = 'encyclopedia-screen';
+        function _getActiveCardDescScreenId() {
+            const materi = document.getElementById('materi-screen');
+            if (materi && materi.style.display !== 'none') return 'materi-screen';
+            return 'encyclopedia-screen';
+        }
         function showCardDescModal(cardData, provinceName) {
+            _cardDescModalReturnScreenId = _getActiveCardDescScreenId();
             const desc = cardDescriptions[cardData.name] || 'Deskripsi belum tersedia untuk kartu ini.';
             const rarityLabels = {
                 magis:'Magis', sakral:'Sakral',
@@ -19279,10 +19306,13 @@
             if (existing) existing.remove();
             const modal = document.createElement('div');
             modal.id = 'enc-card-desc-modal';
+            modal.className = 'hide-scrollbar';
+            modal.tabIndex = -1;
             modal.style.cssText = `
                 position:fixed; inset:0; background:rgba(0,0,0,0.75);
-                display:flex; align-items:center; justify-content:center;
-                z-index:20000; padding:20px; box-sizing:border-box;
+                display:flex; align-items:flex-start; justify-content:center;
+                z-index:20000; padding:40px 20px; box-sizing:border-box;
+                overflow-y:auto; outline:none;
             `;
             modal.innerHTML = `
                 <div style="
@@ -19326,7 +19356,17 @@
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) closeCardDescModal();
             });
+            // Tombol Escape juga menutup modal (selain klik Tutup / klik di luar kotak)
+            modal.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeCardDescModal();
+                }
+            });
             document.body.appendChild(modal);
+            // Fokuskan modal begitu tampil supaya tombol panah atas/bawah langsung
+            // bisa dipakai untuk scroll tanpa perlu klik dulu.
+            modal.focus({ preventScroll: true });
         }
 
         // [FIX] Menutup pop-up deskripsi kartu (klik tombol Tutup ataupun klik di luar
@@ -19337,8 +19377,18 @@
             const modal = document.getElementById('enc-card-desc-modal');
             if (modal) modal.remove();
             playSound('x');
-            const scr = document.getElementById('encyclopedia-screen');
-            if (scr) scr.focus({ preventScroll: true });
+            const scr = document.getElementById(_cardDescModalReturnScreenId);
+            if (scr) {
+                scr.focus({ preventScroll: true });
+                // [FIX] Di sebagian browser/WebView, memanggil focus() tepat setelah
+                // elemen yang sebelumnya fokus (tombol/backdrop modal) dihapus dari DOM
+                // kadang belum "nempel" di render tick yang sama — hasilnya fokus balik
+                // ke <body> dan panah atas/bawah baru jalan lagi setelah layar diklik
+                // manual. Panggil ulang focus() sekali lagi di frame berikutnya supaya
+                // fokus benar-benar nempel ke layar yang tadi membuka modal ini
+                // (ensiklopedia ATAU materi, tergantung dari mana modal dibuka).
+                requestAnimationFrame(() => scr.focus({ preventScroll: true }));
+            }
         }
 
         // === Dukungan scroll .enc-cards-row pakai tombol panah kiri/kanan saat kursor hover ===
@@ -19428,6 +19478,50 @@
                 section.appendChild(cardsRow);
                 container.appendChild(section);
             });
+        }
+
+        // =============================================
+        // KARTU TERKAIT DI HALAMAN MATERI (Bangka Belitung)
+        // Pakai ulang createCardElement() & showCardDescModal() yang sama
+        // dengan yang dipakai di Ensiklopedia, supaya tampilan & pop-up
+        // deskripsinya konsisten di seluruh aplikasi.
+        // =============================================
+        function renderMateriCardRow(containerId, cardNames, provinceName = 'Bangka Belitung') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            const prov = provinces.find(p => p.name === provinceName);
+            if (!prov) return;
+
+            cardNames.forEach(name => {
+                const cardData = prov.cards.find(c => c.name === name);
+                if (!cardData) return;
+
+                const fullCard = { ...cardData, id: 'materi_' + cardData.name, province: prov.name };
+                const cardEl = createCardElement(fullCard);
+                cardEl.style.cursor = 'pointer';
+                cardEl.title = 'Ketuk untuk melihat penjelasan';
+                cardEl.addEventListener('click', () => {
+                    playSound('button');
+                    showCardDescModal(cardData, prov.name);
+                });
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'enc-card-wrapper';
+                wrapper.appendChild(cardEl);
+                container.appendChild(wrapper);
+            });
+        }
+
+        function renderAllMateriCardRows() {
+            // Topik A - Budaya
+            renderMateriCardRow('materi-cards-a-benda',     ['Benteng Kuto Panji', 'Pakaian Seting', 'Lempah Kuning', 'Siwar', 'Dambus']);
+            renderMateriCardRow('materi-cards-a-takbenda',  ['Tari Sepen', 'Buang Jong', 'Bahasa Melayu Bangka']);
+            // Topik B - Ekonomi
+            renderMateriCardRow('materi-cards-b',           ['Timah', 'Pertambangan Timah']);
+            // Topik C - Produk Unggulan
+            renderMateriCardRow('materi-cards-c',           ['Terasi Bangka', 'Lempah Kuning']);
         }
     </script>
 

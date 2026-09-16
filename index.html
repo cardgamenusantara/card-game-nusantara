@@ -19419,7 +19419,19 @@
             if (!container) return;
             container.innerHTML = '';
 
-            const toShow = filter === 'Semua' ? provinces : provinces.filter(p => p.name === filter);
+            // [FIX] Bangka Belitung adalah provinsi khusus (selalu wajib masuk di
+            // setiap pertandingan), jadi saat menampilkan "Semua Provinsi" di
+            // Ensiklopedia, Bangka Belitung ditaruh paling atas duluan sebelum
+            // provinsi lain (urutan provinsi lainnya tetap seperti semula).
+            const toShow = filter === 'Semua'
+                ? [...provinces].sort((a, b) => {
+                    const aFirst = a.name === 'Bangka Belitung';
+                    const bFirst = b.name === 'Bangka Belitung';
+                    if (aFirst && !bFirst) return -1;
+                    if (!aFirst && bFirst) return 1;
+                    return 0;
+                })
+                : provinces.filter(p => p.name === filter);
 
             toShow.forEach(prov => {
                 const section = document.createElement('div');

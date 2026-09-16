@@ -5303,27 +5303,14 @@
         </div>
 
         <div class="materi-tabs">
-            <button class="materi-tab active" id="materi-tab-btn-p" onclick="playSound('button');showMateriTab('p')">📖 Pendahuluan</button>
-            <button class="materi-tab" id="materi-tab-btn-a" onclick="playSound('button');showMateriTab('a')">🏛️ A. Budaya</button>
+            <button class="materi-tab active" id="materi-tab-btn-a" onclick="playSound('button');showMateriTab('a')">🏛️ A. Budaya</button>
             <button class="materi-tab" id="materi-tab-btn-b" onclick="playSound('button');showMateriTab('b')">💼 B. Ekonomi</button>
             <button class="materi-tab" id="materi-tab-btn-c" onclick="playSound('button');showMateriTab('c')">🌟 C. Unggulan</button>
             <button class="materi-tab" id="materi-tab-btn-kuis" onclick="playSound('button');showMateriTab('kuis');initKuis()" style="background:linear-gradient(135deg,rgba(246,211,101,0.35),rgba(253,160,133,0.25));border:1px solid rgba(246,211,101,0.4);">🎯 Kuis</button>
         </div>
 
-        <!-- ===================== TAB PENDAHULUAN ===================== -->
-        <div class="materi-tab-content active" id="materi-tab-p">
-            <div class="materi-wrap">
-                <div class="materi-intro-card" style="margin-bottom:0;">
-                    <div class="materi-intro-heading">🗺️ Tujuan Pembelajaran Bab 7</div>
-                    <div class="materi-intro-text">
-                        Indonesia memiliki wilayah yang sangat luas, yaitu 7,81 juta km² yang terbentang dari Sabang sampai Merauke. Wilayah tersebut dihuni 1.340 suku bangsa yang tersebar di 34 provinsi, lengkap dengan keragaman budayanya. Kita akan mempelajari keunikan dan keistimewaan daerah di Indonesia lewat 3 topik berikut: <b>(1)</b> mengenal warisan budaya dan sejarahnya, <b>(2)</b> menelaah kondisi & aktivitas ekonomi di sekitar tempat tinggal, dan <b>(3)</b> mengenal produk unggulan daerah.
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- ===================== TAB A: BUDAYA ===================== -->
-        <div class="materi-tab-content" id="materi-tab-a">
+        <div class="materi-tab-content active" id="materi-tab-a">
             <div class="materi-wrap">
                 <div class="materi-intro-card">
                     <div class="materi-intro-heading">🏛️ Topik A: Seperti Apakah Budaya Daerahku?</div>
@@ -5464,7 +5451,8 @@
                         <span class="materi-accordion-arrow">▼</span>
                     </div>
                     <div class="materi-accordion-body">
-                        Kondisi geografis dan sumber daya alam (SDA) suatu daerah sangat memengaruhi jenis aktivitas ekonominya. Jika SDA berlimpah, hasilnya bisa didistribusikan ke daerah lain. Jika kurang, kebutuhan didatangkan dari daerah lain. Saat suatu barang diproduksi sendiri dari SDA lokal dengan kualitas unggul, barang itu bisa menjadi <b>produk kebanggaan daerah</b>.
+                        Kondisi geografis dan sumber daya alam (SDA) suatu daerah sangat memengaruhi jenis aktivitas ekonominya. Semakin banyak SDA yang dimiliki, semakin mudah pula pemenuhan kebutuhan masyarakatnya. Jika SDA berlimpah, hasilnya bisa didistribusikan ke daerah lain. Sebaliknya, jika kurang, kebutuhan tersebut akan didatangkan dari daerah lain agar semua kebutuhan masyarakat setempat tetap terpenuhi.<br><br>
+                        Saat suatu barang kebutuhan bisa diproduksi sendiri di daerah menggunakan SDA yang ada, barang itu disebut sebagai <b>barang asli atau barang khas daerah</b>. Jika produksinya memiliki kualitas unggul, barang tersebut bisa menjadi <b>produk kebanggaan daerah</b>.
                     </div>
                 </div>
 
@@ -5475,8 +5463,8 @@
                         <span class="materi-accordion-arrow">▼</span>
                     </div>
                     <div class="materi-accordion-body">
-                        <b>Infrastruktur</b> adalah bangunan, jembatan, dan jalan yang memudahkan aktivitas manusia. Infrastruktur yang baik memperlancar distribusi barang antardaerah. Sebaliknya, jika infrastruktur rusak, ekonomi daerah bisa terhambat.<br><br>
-                        <b>Contoh nyata:</b> Kerusakan jalan Trans Kalimantan poros Berau-Bulungan pernah menyebabkan antrean panjang kendaraan, sehingga pasokan gas elpiji, ayam potong, sayuran, dan ikan laut terlambat sampai tujuan dan berdampak pada turunnya penjualan.
+                        Infrastruktur yang baik memperlancar distribusi barang antardaerah. Sebaliknya, jika infrastruktur rusak, ekonomi daerah bisa terhambat.<br><br>
+                        <b>Contoh:</b> Kerusakan jalan Trans Kalimantan poros Berau-Bulungan pernah menyebabkan antrean panjang kendaraan, sehingga pasokan gas elpiji, ayam potong, sayuran, dan ikan laut terlambat sampai tujuan dan berdampak pada turunnya penjualan.
                     </div>
                 </div>
                 <div class="materi-accordion" id="materi-acc-b3" onclick="toggleMateriAccordion('materi-acc-b3')">
@@ -5485,7 +5473,8 @@
                         <span class="materi-accordion-arrow">▼</span>
                     </div>
                     <div class="materi-accordion-body">
-                        Pada tahun 2017, petani padi di Purbalingga mulai menanam varietas padi unggul dengan masa panen lebih pendek (sekitar 70 hari), lebih tahan hama, memiliki daya tahan lebih kuat terhadap lingkungan, tidak mudah roboh, dan bisa menghasilkan sampai 400 bulir di setiap rumpunnya. Berkat teknologi pertanian ini, padi dapat dipanen 3-4 kali setahun sehingga persediaan beras berlebih dan bisa didistribusikan ke daerah lain sebagai produk unggulan.
+                        Teknologi yang tepat dapat meningkatkan hasil produksi dan mempercepat proses kerja masyarakat di suatu daerah.<br><br>
+                        <b>Contoh:</b> Pada tahun 2017, petani padi di Purbalingga mulai menanam varietas padi unggul dengan masa panen lebih pendek (sekitar 70 hari), lebih tahan hama, memiliki daya tahan lebih kuat terhadap lingkungan, tidak mudah roboh, dan bisa menghasilkan sampai 400 bulir di setiap rumpunnya. Berkat teknologi pertanian ini, padi dapat dipanen 3-4 kali setahun sehingga persediaan beras berlebih dan bisa didistribusikan ke daerah lain sebagai produk unggulan.
                     </div>
                 </div>
                 <div class="materi-accordion" id="materi-acc-b4" onclick="toggleMateriAccordion('materi-acc-b4')">
@@ -5494,7 +5483,8 @@
                         <span class="materi-accordion-arrow">▼</span>
                     </div>
                     <div class="materi-accordion-body">
-                        Kementerian Kelautan dan Perikanan rutin mengadakan pelatihan diversifikasi pengolahan ikan bagi nelayan, pembudidaya, dan pengolah ikan, agar mereka mampu bersaing dan mengembangkan usahanya. Ini membuktikan bahwa SDM yang berkualitas sangat membantu meningkatkan kondisi perekonomian suatu daerah.
+                        Sumber daya manusia yang berkualitas sangat berperan penting dalam mendukung kondisi perekonomian suatu daerah.<br><br>
+                        <b>Contoh:</b> Kementerian Kelautan dan Perikanan rutin mengadakan pelatihan diversifikasi pengolahan ikan bagi nelayan, pembudidaya, dan pengolah ikan, agar mereka mampu bersaing dan mengembangkan usahanya. Ini membuktikan bahwa SDM yang berkualitas sangat membantu meningkatkan kondisi perekonomian suatu daerah.
                     </div>
                 </div>
 
@@ -14794,7 +14784,7 @@
         }
 
         function showMateriTab(tab) {
-            ['a', 'b', 'c', 'p', 'kuis'].forEach(t => {
+            ['a', 'b', 'c', 'kuis'].forEach(t => {
                 document.getElementById(`materi-tab-btn-${t}`).classList.toggle('active', t === tab);
                 document.getElementById(`materi-tab-${t}`).classList.toggle('active', t === tab);
             });
@@ -14835,17 +14825,17 @@
 
                 const container = document.querySelector('.materi-wrap')?.parentElement?.parentElement
                     || document.body;
-                // [FIX] Tambahkan semua tombol tab (a, c, p, kuis — 'b' sudah lebih dulu) supaya
-                // emojinya juga ikut diproses jadi gambar, plus tab 'materi-tab-p' (Pendahuluan)
-                // dan 'materi-tab-kuis' (Kuis) yang sebelumnya tidak pernah diproses sama sekali.
+                // [FIX] Tambahkan semua tombol tab (a, b, c, kuis) supaya
+                // emojinya juga ikut diproses jadi gambar, plus tab 'materi-tab-kuis' (Kuis)
+                // yang sebelumnya tidak pernah diproses sama sekali.
                 const tabIds = [
-                    'materi-tab-p', 'materi-tab-a', 'materi-tab-b', 'materi-tab-c', 'materi-tab-kuis',
-                    'materi-tab-btn-p', 'materi-tab-btn-a', 'materi-tab-btn-b', 'materi-tab-btn-c', 'materi-tab-btn-kuis',
+                    'materi-tab-a', 'materi-tab-b', 'materi-tab-c', 'materi-tab-kuis',
+                    'materi-tab-btn-a', 'materi-tab-btn-b', 'materi-tab-btn-c', 'materi-tab-btn-kuis',
                 ];
                 // Tombol tab jauh lebih kecil dari kartu materi, jadi ikonnya perlu diperkecil
                 // supaya proporsional (bukan 44px seperti di konten materi).
                 const ID_TOMBOL_TAB = new Set([
-                    'materi-tab-btn-p', 'materi-tab-btn-a', 'materi-tab-btn-b', 'materi-tab-btn-c', 'materi-tab-btn-kuis',
+                    'materi-tab-btn-a', 'materi-tab-btn-b', 'materi-tab-btn-c', 'materi-tab-btn-kuis',
                 ]);
 
                 tabIds.forEach(tabId => {
@@ -14901,11 +14891,6 @@
                                 namaFile = 'bintang1';
                             } else if (emoji === '🌟' && teks.includes('Semangat')) {
                                 namaFile = 'bintang2';
-                            }
-                            // [FIX] Judul "🗺️ Tujuan Pembelajaran Bab 7" (tab Pendahuluan) pakai
-                            // gambar sendiri, beda dari "🗺️ SDA & Jenis Aktivitas Ekonomi" (Topik B, peta.png)
-                            if (emoji === '🗺️' && teks.includes('Tujuan Pembelajaran')) {
-                                namaFile = 'peta1';
                             }
                             // [FIX] Tombol "🔄 Coba Lagi" di hasil Kuis pakai gambar sendiri,
                             // beda dari kartu Kosakata "🔄 Akulturasi" (Topik A, panah_putar.png)
@@ -21782,7 +21767,7 @@ const kuisSoalBank = [
             "2.340 suku bangsa"
         ],
         jawaban:2,
-        pembahasan:"Indonesia memiliki wilayah sangat luas (7,81 juta km²) yang dihuni oleh 1.340 suku bangsa yang tersebar di 34 provinsi, lengkap dengan keragaman budayanya."
+        pembahasan:"Indonesia memiliki wilayah sangat luas (7,81 juta km²) yang dihuni oleh 1.340 suku bangsa yang tersebar di berbagai provinsi, lengkap dengan keragaman budayanya."
     }
 ];
 

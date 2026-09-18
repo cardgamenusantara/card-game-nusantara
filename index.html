@@ -268,6 +268,11 @@
             width: 160px;
             justify-content: center;
         }
+        .btn-tutorial-style {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+            box-shadow: 0 4px 14px rgba(79,172,254,0.45) !important;
+            color: #003a5c !important;
+        }
         .btn-ensiklopedia-style {
             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%) !important;
             box-shadow: 0 4px 14px rgba(67,233,123,0.4) !important;
@@ -1912,6 +1917,12 @@
         .lb-self-tag { font-size: 0.7em; background: rgba(102,126,234,0.7); color: #fff; border-radius: 6px; padding: 1px 7px; margin-left: 6px; }
 
         #encyclopedia-screen {
+            display: none; position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 15000; overflow-y: auto;
+        }
+        #tutorial-screen {
             display: none; position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -4635,8 +4646,10 @@
                     <button class="menu-nav-arrow" onclick="playSound('button');scrollMenuNav(-1)">◀</button>
                     <div class="menu-nav-scroll" id="menu-nav-scroll">
                         <div class="menu-nav-scroll-inner" id="menu-nav-inner">
+                            <button class="btn-encyclopedia btn-tutorial-style" onclick="playSound('button');showTutorial()">📘 Tutorial</button>
+                            <button class="btn-encyclopedia btn-materi-style" onclick="playSound('button');showMateriScreen()">📚 Materi</button>
+                            <button class="btn-encyclopedia btn-ensiklopedia-style" onclick="playSound('button');showEncyclopedia()">🎴 Koleksi Kartu</button>
                             <button class="btn-encyclopedia btn-leaderboard" onclick="playSound('button');showLeaderboard()">🏆 Papan Peringkat</button>
-                            <button class="btn-encyclopedia btn-ensiklopedia-style" onclick="playSound('button');showEncyclopedia()">🧭 Ensiklopedia</button>
                             <div class="btn-achievement-wrapper">
                                 <button class="btn-encyclopedia btn-achievement-style" onclick="playSound('button');showAchievementScreen()">🏅 Pencapaian<span id="achievement-notif-badge">!</span></button>
                             </div>
@@ -4644,7 +4657,6 @@
                                 <button class="btn-encyclopedia btn-teman-style" onclick="playSound('button');showTemanScreen()">👥 Teman<span id="teman-notif-badge"></span></button>
                             </div>
                             <button class="btn-encyclopedia btn-kostum-style" onclick="playSound('button');showKostumPicker()">⚔️ Tantang</button>
-                            <button class="btn-encyclopedia btn-materi-style" onclick="playSound('button');showMateriScreen()">📚 Materi</button>
                             <button class="btn-encyclopedia btn-settings-style" onclick="playSound('button');showSettingsScreen()">⚙️ Pengaturan</button>
                             <button class="btn-encyclopedia btn-pengembang-style" onclick="playSound('button');showPengembangScreen()">👨‍💻 Pengembang</button>
                             <button class="btn-encyclopedia btn-komunitas-style" onclick="playSound('button');window.open('https://chat.whatsapp.com/EZiXitDlWPF83neFClgci0','_blank')">💬 Komunitas</button>
@@ -4680,7 +4692,7 @@
     <!-- ENCYCLOPEDIA SCREEN -->
     <div id="encyclopedia-screen" tabindex="-1" style="outline:none;">
         <div class="enc-header">
-            <div class="enc-title">🧭 Ensiklopedia Nusantara</div>
+            <div class="enc-title">🎴 Koleksi Kartu Nusantara</div>
             <div class="enc-header-actions">
                 <button class="enc-scroll-btn" id="enc-scroll-top-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','encyclopedia-screen')">⬆</button>
                 <button class="enc-scroll-btn" id="enc-scroll-bottom-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','encyclopedia-screen')">⬇</button>
@@ -4690,8 +4702,6 @@
 
         <div class="enc-tabs">
             <button class="enc-tab active" id="enc-tab-btn-cards" onclick="playSound('button');showEncTab('cards')">🔶 Kartu</button>
-            <button class="enc-tab" id="enc-tab-btn-rules" onclick="playSound('button');showEncTab('rules')">📖 Aturan</button>
-            <button class="enc-tab" id="enc-tab-btn-buttons" onclick="playSound('button');showEncTab('buttons')">🎛️ Tombol</button>
         </div>
 
         <!-- TAB KARTU -->
@@ -4700,8 +4710,27 @@
             <div id="enc-cards-container"></div>
         </div>
 
+    </div>
+
+    <!-- TUTORIAL SCREEN -->
+    <div id="tutorial-screen" tabindex="-1" style="outline:none;">
+        <div class="enc-header">
+            <div class="enc-title">📘 Tutorial</div>
+            <div class="enc-header-actions">
+                <button class="enc-scroll-btn" id="tut-scroll-top-btn" title="Scroll ke atas" onclick="playSound('button');encScrollTo('top','tutorial-screen')">⬆</button>
+                <button class="enc-scroll-btn" id="tut-scroll-bottom-btn" title="Scroll ke bawah" onclick="playSound('button');encScrollTo('bottom','tutorial-screen')">⬇</button>
+                <button class="btn-enc-close" onclick="playSound('x');hideTutorial()">✖ Tutup</button>
+            </div>
+        </div>
+
+        <div class="enc-tabs">
+            <button class="enc-tab active" id="enc-tab-btn-rules" onclick="playSound('button');showTutTab('rules')">📖 Aturan</button>
+            <button class="enc-tab" id="enc-tab-btn-buttons" onclick="playSound('button');showTutTab('buttons')">🎛️ Tombol</button>
+            <button class="enc-tab" id="enc-tab-btn-video" onclick="playSound('button');showTutTab('video')">🎬 Video</button>
+        </div>
+
         <!-- TAB ATURAN -->
-        <div class="enc-tab-content" id="enc-tab-rules">
+        <div class="enc-tab-content active" id="enc-tab-rules">
             <div class="enc-rules-container">
                 <div class="enc-rules-title">📖 Cara Main Card Game Nusantara</div>
                 <div class="enc-rules-subtitle">Mudah dipahami, seru dimainkan! 🎉</div>
@@ -4774,7 +4803,7 @@
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🏆</div>
                                 <div style="font-size:0.55em;text-align:center;color:#312e81;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Produk Unggulan</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#818cf8,#4338ca);color:#fff;"><span data-rarity-icon="rareplus"></span> Spesial</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#818cf8,#4338ca);color:#fff;"><span data-rarity-icon="rareplus"></span> Elite</span>
                         </div>
 
                         <!-- Rare★ -->
@@ -4784,7 +4813,7 @@
                                 <div style="width:100%;height:58px;background:rgba(0,0,0,0.1);border-radius:6px;margin-bottom:5px;display:flex;align-items:center;justify-content:center;font-size:2em;">🌍</div>
                                 <div style="font-size:0.55em;text-align:center;color:#1565c0;margin-top:auto;padding-top:4px;border-top:1px solid rgba(0,0,0,0.1);">Sumber Daya Alam</div>
                             </div>
-                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#bbdefb,#64b5f6);color:#0d47a1;"><span data-rarity-icon="rarestar"></span> Elite</span>
+                            <span class="enc-rarity-chip" style="background:linear-gradient(135deg,#bbdefb,#64b5f6);color:#0d47a1;"><span data-rarity-icon="rarestar"></span> Spesial</span>
                         </div>
 
                         <!-- Rare -->
@@ -4838,11 +4867,11 @@
                         </div>
 
                     </div>
-                    <!-- Peringatan Mistik & Legendaris -->
+                    <!-- Peringatan Legendaris+ & Legendaris -->
                     <div style="margin-top:16px;background:linear-gradient(135deg,rgba(255,200,0,0.18),rgba(255,80,0,0.15));border:1.5px solid rgba(255,200,0,0.5);border-radius:14px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;">
                         <span style="font-size:1.6em;flex-shrink:0;">⚠️</span>
                         <div>
-                            <div style="font-weight:800;color:#ffd700;font-size:0.97em;margin-bottom:4px;">Kartu <span data-rarity-icon="magis"></span> Magis, <span data-rarity-icon="sakral"></span> Sakral, <span data-rarity-icon="mythic"></span> Mistik, dan <span data-rarity-icon="legendary"></span> Legendaris tidak dibagikan di awal!</div>
+                            <div style="font-weight:800;color:#ffd700;font-size:0.97em;margin-bottom:4px;">Kartu <span data-rarity-icon="magis"></span> Ultra+, <span data-rarity-icon="sakral"></span> Ultra, <span data-rarity-icon="mythic"></span> Legendaris+, dan <span data-rarity-icon="legendary"></span> Legendaris tidak dibagikan di awal!</div>
                             <div style="font-size:0.86em;color:rgba(255,255,255,0.88);line-height:1.6;text-align:justify;">Kedua kartu ini hanya bisa kamu dapatkan lewat <strong style="color:#ffd700;">Tambah Kartu</strong> saat bermain. Gunakan strategi Level Tambah Kartu untuk meningkatkan peluangmu!</div>
                         </div>
                     </div>
@@ -4896,7 +4925,7 @@
                     <span class="enc-rule-icon">🎰</span>
                     <div class="enc-rule-heading">Sistem Level Tambah Kartu — Makin Sering Tambah Kartu, Makin Bagus Kartunya!</div>
                     <div class="enc-rule-text">
-                        Setiap pemain punya <strong>Level Tambah Kartu</strong> (Level 1–12) yang naik otomatis setiap <strong>1 kali Tambah Kartu</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 12 adalah level tertinggi, dengan <span data-rarity-icon="magis"></span> Magis dan <span data-rarity-icon="sakral"></span> Sakral dominan!
+                        Setiap pemain punya <strong>Level Tambah Kartu</strong> (Level 1–12) yang naik otomatis setiap <strong>1 kali Tambah Kartu</strong>. Semakin tinggi levelmu, semakin besar peluang mendapat kartu langka! Level 12 adalah level tertinggi, dengan <span data-rarity-icon="magis"></span> Ultra+ dan <span data-rarity-icon="sakral"></span> Ultra dominan!
                         <ul style="margin-top:10px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
                             <li style="display:flex;gap:8px;align-items:flex-start;">🔄 <span><strong>Reset Level Tambah Kartu:</strong> Level Tambah Kartu-mu akan <strong>kembali ke Level 1</strong> jika salah satu dari kondisi ini terpenuhi:
                                 <ul style="margin-top:6px;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:4px;">
@@ -4917,13 +4946,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Magis</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Sakral</td><td>2%</td><td>2%</td><td>2%</td><td>2%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Mistik</td><td>3%</td><td>3%</td><td>3%</td><td>3%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Ultra+</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Ultra</td><td>2%</td><td>2%</td><td>2%</td><td>2%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Legendaris+</td><td>3%</td><td>3%</td><td>3%</td><td>3%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="legendary"></span> Legendaris</td><td>4%</td><td>4%</td><td>4%</td><td>4%</td></tr>
                                 <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="epic"></span> Epik</td><td>5%</td><td>5%</td><td>5%</td><td>5%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Spesial</td><td>6%</td><td>6%</td><td>6%</td><td>6%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Elite</td><td>7%</td><td>7%</td><td>7%</td><td>8%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Elite</td><td>6%</td><td>6%</td><td>6%</td><td>6%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Spesial</td><td>7%</td><td>7%</td><td>7%</td><td>8%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rare"></span> Langka</td><td>8%</td><td>8%</td><td>9%</td><td>10%</td></tr>
                                 <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommon"></span> Unik</td><td>9%</td><td>10%</td><td>11%</td><td style="color:#ffd700;font-weight:bold;">19%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommonplus"></span> Umum</td><td>11%</td><td>13%</td><td style="color:#ffd700;font-weight:bold;">20%</td><td>16%</td></tr>
@@ -4944,13 +4973,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Magis</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Sakral</td><td>2%</td><td>2%</td><td>2%</td><td>2%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Mistik</td><td>3%</td><td>3%</td><td>3%</td><td>3%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Ultra+</td><td>1%</td><td>1%</td><td>1%</td><td>1%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Ultra</td><td>2%</td><td>2%</td><td>2%</td><td>2%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Legendaris+</td><td>3%</td><td>3%</td><td>3%</td><td>3%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="legendary"></span> Legendaris</td><td>4%</td><td>4%</td><td>5%</td><td>10%</td></tr>
                                 <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="epic"></span> Epik</td><td>5%</td><td>6%</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">18%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Spesial</td><td>6%</td><td>9%</td><td style="color:#ffd700;font-weight:bold;">17%</td><td>15%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Elite</td><td>9%</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Elite</td><td>6%</td><td>9%</td><td style="color:#ffd700;font-weight:bold;">17%</td><td>15%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Spesial</td><td>9%</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rare"></span> Langka</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td><td>11%</td></tr>
                                 <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommon"></span> Unik</td><td>16%</td><td>13%</td><td>12%</td><td>9%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommonplus"></span> Umum</td><td>14%</td><td>12%</td><td>9%</td><td>7%</td></tr>
@@ -4971,13 +5000,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Magis</td><td>1%</td><td>5%</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">19%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Sakral</td><td>5%</td><td>11%</td><td style="color:#ffd700;font-weight:bold;">19%</td><td>16%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Mistik</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="magis"></span> Ultra+</td><td>1%</td><td>5%</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">19%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="sakral"></span> Ultra</td><td>5%</td><td>11%</td><td style="color:#ffd700;font-weight:bold;">19%</td><td>16%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="mythic"></span> Legendaris+</td><td>10%</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="legendary"></span> Legendaris</td><td style="color:#ffd700;font-weight:bold;">18%</td><td>15%</td><td>13%</td><td>11%</td></tr>
                                 <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="epic"></span> Epik</td><td>15%</td><td>13%</td><td>11%</td><td>10%</td></tr>
-                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Spesial</td><td>13%</td><td>10%</td><td>8%</td><td>8%</td></tr>
-                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Elite</td><td>11%</td><td>8%</td><td>7%</td><td>7%</td></tr>
+                                <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rareplus"></span> Elite</td><td>13%</td><td>10%</td><td>8%</td><td>8%</td></tr>
+                                <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="rarestar"></span> Spesial</td><td>11%</td><td>8%</td><td>7%</td><td>7%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="rare"></span> Langka</td><td>8%</td><td>7%</td><td>6%</td><td>6%</td></tr>
                                 <tr><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommon"></span> Unik</td><td>7%</td><td>6%</td><td>5%</td><td>4%</td></tr>
                                 <tr style="background:rgba(255,255,255,0.05);"><td style="text-align:left;padding:4px;"><span data-rarity-icon="uncommonplus"></span> Umum</td><td>6%</td><td>4%</td><td>3%</td><td>3%</td></tr>
@@ -5048,7 +5077,7 @@
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;width:38px;height:38px;font-size:1em;font-weight:bold;opacity:1;box-shadow:none;padding:0;">⬆</button>
                             <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Panah ke Atas</div>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ada di pojok kanan atas, sebelum tombol Tutup (misalnya di halaman Ensiklopedia atau Papan Peringkat). Dipencet buat langsung lompat ke bagian paling atas halaman, jadi tidak usah geser-geser layar sendiri.</div></div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ada di pojok kanan atas, sebelum tombol Tutup (misalnya di halaman Koleksi Kartu atau Papan Peringkat). Dipencet buat langsung lompat ke bagian paling atas halaman, jadi tidak usah geser-geser layar sendiri.</div></div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;width:38px;height:38px;font-size:1em;font-weight:bold;opacity:1;box-shadow:none;padding:0;">⬇</button>
@@ -5058,7 +5087,7 @@
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:rgba(244,67,54,0.85);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:8px 18px;font-size:0.9em;font-weight:bold;opacity:1;box-shadow:none;">✖ Tutup</button>
                             <div><div style="font-weight:bold;color:#fff;font-size:0.9em;">Tombol Tutup (Bentuk Kotak Lonjong)</div>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ini bentuk tombol Tutup yang ada tulisannya, biasanya di pojok kanan atas Ensiklopedia atau Pengaturan. Dipencet buat balik ke tampilan sebelumnya. Aman dipencet kapan saja, permainanmu tidak akan hilang.</div></div>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Ini bentuk tombol Tutup yang ada tulisannya, biasanya di pojok kanan atas Koleksi Kartu atau Pengaturan. Dipencet buat balik ke tampilan sebelumnya. Aman dipencet kapan saja, permainanmu tidak akan hilang.</div></div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:rgba(244,67,54,0.82);color:#fff;border-radius:8px;padding:4px 11px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">✖ Tutup</button>
@@ -5099,8 +5128,8 @@
                             <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Lihat siapa aja yang peringkatnya paling tinggi.</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
-                            <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#43e97b,#38f9d7);color:#0a3d1f;border-radius:30px;padding:9px 16px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">🧭 Ensiklopedia</button>
-                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Buka halaman kartu & aturan main. Ini halaman yang sedang kamu baca sekarang!</div>
+                            <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#43e97b,#38f9d7);color:#0a3d1f;border-radius:30px;padding:9px 16px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">🎴 Koleksi Kartu</button>
+                            <div style="font-size:0.8em;color:rgba(255,255,255,0.75);line-height:1.5;">Buka halaman koleksi kartu semua provinsi.</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.06);border-radius:12px;padding:10px 14px;">
                             <button disabled style="flex-shrink:0;background:linear-gradient(135deg,#c0392b,#8e44ad);color:#fff;border-radius:30px;padding:9px 16px;font-size:0.85em;font-weight:bold;opacity:1;box-shadow:none;">🏅 Pencapaian</button>
@@ -5261,6 +5290,16 @@
                 </div>
             </div>
         </div>
+
+        <!-- TAB VIDEO -->
+        <div class="enc-tab-content" id="enc-tab-video">
+            <div class="enc-rules-container">
+                <div class="enc-rules-title">🎬 Video Tutorial</div>
+                <div class="enc-rules-subtitle">Tonton video ini buat lihat langsung cara mainnya! ▶️</div>
+                <video src="gambar/video/video_tutorial1.mp4" controls playsinline style="width:100%;border-radius:14px;background:#000;display:block;margin-top:10px;"></video>
+            </div>
+        </div>
+
     </div>
 
     <!-- DRAW LEVEL INFO POPUP -->
@@ -8490,7 +8529,7 @@
                         (function _closeAllBeforeReconnect() {
                             // ── Layar navigasi ──
                             ['profile-screen','settings-screen','leaderboard-screen',
-                             'teman-screen','encyclopedia-screen','pengembang-screen',
+                             'teman-screen','encyclopedia-screen','tutorial-screen','pengembang-screen',
                              'view-profile-modal','ingame-settings-panel'].forEach(id => {
                                 const el = document.getElementById(id);
                                 if (el) el.style.display = 'none';
@@ -10446,6 +10485,7 @@
                 'avatar-picker-overlay',
                 // [FIX] Ensiklopedia, Teman, & Pengembang sebelumnya tidak ditutup saat lawan ditemukan
                 'encyclopedia-screen',
+                'tutorial-screen',
                 'teman-screen',
                 'pengembang-screen',
                 // [FIX] Materi "Daerahku Kebanggaanku" (beserta tab Kuis di dalamnya) sebelumnya
@@ -10931,7 +10971,7 @@
                         const _isCustomLobby = !!(_customRoomId || _customRoomRole
                                                 || document.getElementById('custom-room-overlay')?.style.display === 'flex');
                         const _isInAnyPopup  = ['profile-screen','settings-screen','leaderboard-screen',
-                                                'teman-screen','encyclopedia-screen','pengembang-screen',
+                                                'teman-screen','encyclopedia-screen','tutorial-screen','pengembang-screen',
                                                 'achievement-screen','rank-info-overlay','draw-level-overlay',
                                                 'ach-popup-overlay','visit-profile-screen'].some(id => {
                                                     const el = document.getElementById(id);
@@ -14768,7 +14808,41 @@
             restoreBodyOverflow();
         }
 
-        // Tombol scroll ke atas/bawah di header (dipakai di Ensiklopedia, Papan Peringkat, dll)
+        // ============================================================
+        // TUTORIAL
+        // ============================================================
+        function showTutorial() {
+            document.getElementById('tutorial-screen').style.display = 'block';
+            document.getElementById('tutorial-screen').focus({ preventScroll: true }); // agar panah atas/bawah keyboard langsung bisa scroll tanpa perlu klik dulu
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideTutorial() {
+            const scr = document.getElementById('tutorial-screen');
+            scr.style.display = 'none';
+            restoreBodyOverflow();
+            // Hentikan video tutorial kalau lagi diputar, biar suaranya nggak nyambung terus di background.
+            const vid = document.querySelector('#enc-tab-video video');
+            if (vid) vid.pause();
+        }
+
+        function showTutTab(tab) {
+            document.getElementById('enc-tab-btn-rules').classList.toggle('active', tab === 'rules');
+            document.getElementById('enc-tab-btn-buttons').classList.toggle('active', tab === 'buttons');
+            document.getElementById('enc-tab-btn-video').classList.toggle('active', tab === 'video');
+            document.getElementById('enc-tab-rules').classList.toggle('active', tab === 'rules');
+            document.getElementById('enc-tab-buttons').classList.toggle('active', tab === 'buttons');
+            document.getElementById('enc-tab-video').classList.toggle('active', tab === 'video');
+            // Hentikan video kalau pindah dari tab Video ke tab lain.
+            if (tab !== 'video') {
+                const vid = document.querySelector('#enc-tab-video video');
+                if (vid) vid.pause();
+            }
+            // Kembalikan fokus ke layar tutorial agar keyboard langsung bisa scroll lagi.
+            document.getElementById('tutorial-screen').focus({ preventScroll: true });
+        }
+
+        // Tombol scroll ke atas/bawah di header (dipakai di Ensiklopedia, Tutorial, Papan Peringkat, dll)
         function encScrollTo(pos, screenId) {
             const scr = document.getElementById(screenId || 'encyclopedia-screen');
             if (!scr) return;
@@ -16219,13 +16293,13 @@
             12: { magis:19, sakral:16, mythic:13, legendary:11, epic:10, rareplus:8, rarestar:7, rare:6, uncommon:4, uncommonplus:3, commonplus:2, common:1 }
         };
         const DL_LABELS = [
-            { key:'magis',       label:'Magis',       power: 12 },
-            { key:'sakral',      label:'Sakral',      power: 11 },
-            { key:'mythic',      label:'Mistik',      power: 10 },
+            { key:'magis',       label:'Ultra+',       power: 12 },
+            { key:'sakral',      label:'Ultra',      power: 11 },
+            { key:'mythic',      label:'Legendaris+',       power: 10 },
             { key:'legendary',   label:'Legendaris',   power: 9  },
             { key:'epic',        label:'Epik',         power: 8  },
-            { key:'rareplus',    label:'Spesial',        power: 7  },
-            { key:'rarestar',    label:'Elite',        power: 6  },
+            { key:'rareplus',    label:'Elite',        power: 7  },
+            { key:'rarestar',    label:'Spesial',        power: 6  },
             { key:'rare',        label:'Langka',         power: 5  },
             { key:'uncommon',    label:'Unik',     power: 4  },
             { key:'uncommonplus',label:'Umum',    power: 3  },
@@ -18577,11 +18651,7 @@
 
         function showEncTab(tab) {
             document.getElementById('enc-tab-btn-cards').classList.toggle('active', tab === 'cards');
-            document.getElementById('enc-tab-btn-rules').classList.toggle('active', tab === 'rules');
-            document.getElementById('enc-tab-btn-buttons').classList.toggle('active', tab === 'buttons');
             document.getElementById('enc-tab-cards').classList.toggle('active', tab === 'cards');
-            document.getElementById('enc-tab-rules').classList.toggle('active', tab === 'rules');
-            document.getElementById('enc-tab-buttons').classList.toggle('active', tab === 'buttons');
             // [FIX] Klik tombol tab memindahkan fokus browser ke tombol itu sendiri,
             // sehingga panah atas/bawah berhenti scroll konten sampai area layar diklik ulang.
             // Kembalikan fokus ke layar ensiklopedia agar keyboard langsung bisa scroll lagi.
@@ -19290,9 +19360,9 @@
             _cardDescModalReturnScreenId = _getActiveCardDescScreenId();
             const desc = cardDescriptions[cardData.name] || 'Deskripsi belum tersedia untuk kartu ini.';
             const rarityLabels = {
-                magis:'Magis', sakral:'Sakral',
-                mythic:'Mistik', legendary:'Legendaris', epic:'Epik',
-                rareplus:'Spesial', rarestar:'Elite', rare:'Langka',
+                magis:'Ultra+', sakral:'Ultra',
+                mythic:'Legendaris+', legendary:'Legendaris', epic:'Epik',
+                rareplus:'Elite', rarestar:'Spesial', rare:'Langka',
                 uncommon:'Unik', uncommonplus:'Umum',
                 commonplus:'Biasa', common:'Dasar'
             };
@@ -19464,13 +19534,13 @@
                     powerBadge.textContent = '⚡ Kekuatan ' + cardData.power;
 
                     const rarityLabels = {
-                        magis:       'Magis',
-                        sakral:      'Sakral',
-                        mythic:      'Mistik',
+                        magis:       'Ultra+',
+                        sakral:      'Ultra',
+                        mythic:      'Legendaris+',
                         legendary:   'Legendaris',
                         epic:        'Epik',
-                        rareplus:    'Spesial',
-                        rarestar:    'Elite',
+                        rareplus:    'Elite',
+                        rarestar:    'Spesial',
                         rare:        'Langka',
                         uncommon:    'Unik',
                         uncommonplus:'Umum',
@@ -19528,7 +19598,7 @@
 
         function renderAllMateriCardRows() {
             // Topik A - Budaya
-            renderMateriCardRow('materi-cards-a-benda',     ['Benteng Kuto Panji', 'Pakaian Seting', 'Lempah Kuning', 'Siwar', 'Dambus']);
+            renderMateriCardRow('materi-cards-a-benda',     ['Benteng Kuto Panji', 'Rumah Rakit', 'Pakaian Seting', 'Lempah Kuning', 'Siwar', 'Dambus']);
             renderMateriCardRow('materi-cards-a-takbenda',  ['Tari Sepen', 'Buang Jong', 'Bahasa Melayu Bangka']);
             // Topik B - Ekonomi
             renderMateriCardRow('materi-cards-b',           ['Timah', 'Pertambangan Timah']);
@@ -20428,6 +20498,7 @@ const _ACH_SCREEN_MAP = [
     { id: 'profile-screen',       displayVal: 'flex'  },
     { id: 'leaderboard-screen',   displayVal: 'block' },
     { id: 'encyclopedia-screen',  displayVal: 'block' },
+    { id: 'tutorial-screen',      displayVal: 'block' },
     { id: 'settings-screen',      displayVal: 'flex'  },
     { id: 'kostum-picker-overlay',displayVal: 'flex'  },
     { id: 'teman-screen',         displayVal: 'block' },

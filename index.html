@@ -19366,7 +19366,16 @@
         let _cardDescModalReturnScreenId = 'encyclopedia-screen';
         function _getActiveCardDescScreenId() {
             const materi = document.getElementById('materi-screen');
-            if (materi && materi.style.display !== 'none') return 'materi-screen';
+            // [FIX] #materi-screen disembunyikan lewat CSS stylesheet (display:none),
+            // bukan inline style. Sebelum layar Materi pernah dibuka sekali pun di
+            // sesi ini, materi.style.display masih string kosong '' (bukan 'none'),
+            // sehingga pengecekan lama (materi.style.display !== 'none') keliru
+            // menganggap Materi "aktif" padahal sebenarnya tersembunyi. Akibatnya
+            // closeCardDescModal() mencoba focus() ke elemen yang benar-benar
+            // display:none (tidak bisa difokuskan sama sekali), fokus pun jatuh ke
+            // <body> dan panah atas/bawah baru jalan lagi setelah user klik manual.
+            // getComputedStyle() membaca nilai tampilan yang sebenarnya dirender.
+            if (materi && getComputedStyle(materi).display !== 'none') return 'materi-screen';
             return 'encyclopedia-screen';
         }
         function showCardDescModal(cardData, provinceName) {
@@ -19427,7 +19436,7 @@
                     <div style="
                         background:rgba(255,255,255,0.07); border-radius:12px;
                         padding:16px; font-size:0.92em; color:rgba(255,255,255,0.88);
-                        line-height:1.7; margin-bottom:20px;
+                        line-height:1.7; margin-bottom:20px; text-align:justify;
                     ">${desc}</div>
                     <button onclick="closeCardDescModal()" style="
                         width:100%; padding:12px; border-radius:12px; border:none;
@@ -19462,15 +19471,17 @@
             playSound('x');
             const scr = document.getElementById(_cardDescModalReturnScreenId);
             if (scr) {
-                scr.focus({ preventScroll: true });
-                // [FIX] Di sebagian browser/WebView, memanggil focus() tepat setelah
-                // elemen yang sebelumnya fokus (tombol/backdrop modal) dihapus dari DOM
-                // kadang belum "nempel" di render tick yang sama — hasilnya fokus balik
-                // ke <body> dan panah atas/bawah baru jalan lagi setelah layar diklik
-                // manual. Panggil ulang focus() sekali lagi di frame berikutnya supaya
-                // fokus benar-benar nempel ke layar yang tadi membuka modal ini
-                // (ensiklopedia ATAU materi, tergantung dari mana modal dibuka).
-                requestAnimationFrame(() => scr.focus({ preventScroll: true }));
+                // [FIX] Satu kali panggil focus() kadang belum cukup di sebagian
+                // browser/WebView (fokus balik ke <body> sesaat setelah elemen
+                // yang tadinya fokus dihapus dari DOM), sehingga panah atas/bawah
+                // baru jalan lagi setelah user klik manual ke layar. Panggil
+                // focus() beberapa kali di titik waktu berbeda (langsung, rAF
+                // berikutnya, dan sedikit setelahnya) supaya fokus benar-benar
+                // "nempel" tanpa perlu klik dulu.
+                const refocus = () => scr.focus({ preventScroll: true });
+                refocus();
+                requestAnimationFrame(refocus);
+                setTimeout(refocus, 50);
             }
         }
 
@@ -19503,7 +19514,7 @@
             // tapi hanya saat layar Ensiklopedia sedang terbuka, dan dibatasi
             // jedanya (cooldown) supaya tidak spam toast saat tombol ditahan.
             const encScreen = document.getElementById('encyclopedia-screen');
-            if (encScreen && encScreen.style.display !== 'none' && typeof showToast === 'function') {
+            if (encScreen && getComputedStyle(encScreen).display !== 'none' && typeof showToast === 'function') {
                 const now = Date.now();
                 if (now - _encNoHoverToastAt > 2000) {
                     _encNoHoverToastAt = now;
